@@ -1,0 +1,721 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 游戏头部 */
+.game-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.game-header h1 {
+    font-size: 2em;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.game-stats {
+    display: flex;
+    gap: 30px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 屏幕切换 - 优化动画性能 */
+.screen {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    will-change: opacity;
+}
+
+.screen.active {
+    display: block;
+    opacity: 1;
+}
+
+.screen-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.screen-content h2 {
+    font-size: 2em;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* 游戏规则 */
+.game-rules {
+    text-align: left;
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.game-rules h3 {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.game-rules ul {
+    list-style: none;
+}
+
+.game-rules li {
+    margin: 10px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* 按钮 */
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #11998e, #38ef7d);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(56, 239, 125, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    font-size: 0.9em;
+    padding: 8px 20px;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+}
+
+.btn-sound {
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    color: white;
+    font-size: 0.9em;
+    padding: 8px 16px;
+    min-width: 60px;
+}
+
+.btn-sound:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(142, 68, 173, 0.4);
+}
+
+.btn-sound.muted {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+}
+
+/* 游戏布局 */
+.game-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* 面板样式 */
+.panel {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.panel h3 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.3em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+/* 关卡进度条 */
+.level-progress {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* 工单列表 */
+.work-orders-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.work-order {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.work-order:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.work-order.selected {
+    border-color: #667eea;
+    background: #e8f0fe;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.order-number {
+    font-weight: bold;
+    color: #333;
+}
+
+.priority-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    color: white;
+}
+
+.priority-high {
+    background: #e74c3c;
+}
+
+.priority-medium {
+    background: #f39c12;
+}
+
+.priority-low {
+    background: #27ae60;
+}
+
+.order-details {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.4;
+}
+
+.order-requirements {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.requirement-tag {
+    background: #667eea;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.75em;
+}
+
+.order-items {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+    font-size: 0.85em;
+}
+
+.item-info {
+    margin: 2px 0;
+}
+
+/* 运输方式选择 */
+.transport-options {
+    display: grid;
+    gap: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.transport-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    will-change: transform, box-shadow;
+}
+
+.transport-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.transport-card.selected {
+    border-color: #27ae60;
+    background: #e8f8f5;
+}
+
+.transport-icon {
+    font-size: 2.5em;
+    width: 60px;
+    text-align: center;
+}
+
+.transport-info h4 {
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.transport-info p {
+    margin: 3px 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.transport-info small {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.8em;
+    color: #999;
+    font-style: italic;
+}
+
+.select-btn {
+    margin-left: auto;
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border-radius: 15px;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.transport-card.selected .select-btn {
+    background: #27ae60;
+}
+
+/* 已分配任务 */
+.assigned-tasks {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.assigned-task {
+    background: #e8f0fe;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.task-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.task-transport {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.task-status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    background: #f39c12;
+    color: white;
+}
+
+.task-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* 最终统计 */
+.final-stats {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.final-stats p {
+    margin: 15px 0;
+    font-size: 1.1em;
+}
+
+.final-stats span {
+    font-weight: bold;
+    color: #667eea;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .game-stats {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .game-container {
+        padding: 10px;
+    }
+    
+    .game-header h1 {
+        font-size: 1.5em;
+    }
+    
+    .transport-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .select-btn {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.work-order,
+.transport-card,
+.assigned-task {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 反馈界面样式 */
+.level-feedback {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.feedback-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease-out;
+}
+
+.feedback-content h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.feedback-stats {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1.1em;
+}
+
+.stat-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.2em;
+}
+
+.feedback-content h3 {
+    color: #555;
+    margin: 30px 0 15px 0;
+    font-size: 1.5em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 8px;
+}
+
+.results-list {
+    margin: 20px 0;
+}
+
+.result-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.result-item.correct {
+    border-left-color: #27ae60;
+    background: #e8f8f5;
+}
+
+.result-item.incorrect {
+    border-left-color: #e74c3c;
+    background: #fdf2f2;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.order-number {
+    font-weight: bold;
+    color: #666;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.item-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.result-status {
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+}
+
+.result-item.correct .result-status {
+    background: #27ae60;
+    color: white;
+}
+
+.result-item.incorrect .result-status {
+    background: #e74c3c;
+    color: white;
+}
+
+.result-details {
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.result-details p {
+    margin: 5px 0;
+    color: #555;
+}
+
+.result-details strong {
+    color: #333;
+}
+
+.feedback-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
