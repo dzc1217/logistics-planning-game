@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小游戏乐园 - 精选休闲游戏平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+        }
+
+        .logo-text h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+
+        .logo-text p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #999;
+        }
+
+        /* 分类标签 */
+        .categories {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .category-tag {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .category-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-tag.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* 游戏网格 */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .game-thumbnail {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(50%, 50%) rotate(180deg); }
+        }
+
+        .game-icon {
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1);
+        }
+
+        .game-info {
+            padding: 25px;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .game-description {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .game-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .game-tag {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .footer p {
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .logo {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .categories {
+                gap: 8px;
+            }
+
+            .category-tag {
+                padding: 8px 18px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* 无结果提示 */
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            color: #666;
+            font-size: 1.2rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🎮</div>
+                <div class="logo-text">
+                    <h1>小游戏乐园</h1>
+                    <p>精选休闲游戏，随时随地畅玩</p>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索游戏...">
+                <span class="search-icon">🔍</span>
+            </div>
+        </div>
+
+        <!-- 分类标签 -->
+        <div class="categories" id="categories">
+            <div class="category-tag active" data-category="all">🎯 全部</div>
+            <div class="category-tag" data-category="puzzle">🧩 益智</div>
+            <div class="category-tag" data-category="action">⚡ 动作</div>
+            <div class="category-tag" data-category="casual">🎪 休闲</div>
+            <div class="category-tag" data-category="strategy">♟️ 策略</div>
+            <div class="category-tag" data-category="arcade">🕹️ 街机</div>
+        </div>
+
+        <!-- 游戏网格 -->
+        <div class="games-grid" id="gamesGrid">
+            <!-- 游戏卡片将通过JavaScript动态生成 -->
+        </div>
+
+        <!-- 无结果提示 -->
+        <div class="no-results" id="noResults">
+            <p>😕 没有找到相关游戏</p>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <h3>🎮 小游戏乐园</h3>
+            <p>精选休闲游戏平台 | 纯HTML开发 | 零依赖 | 无需安装</p>
+            <p style="margin-top: 10px; font-size: 0.85rem;">© 2025 小游戏乐园 - 所有游戏仅供娱乐</p>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const games = [
+            {
+ 	id: 2,
+                name: '🚚 小小物流规划师',
+                icon: '🚚',
+                description: '物流规划小游戏！接取任务，选择合适的运输方式，简单易上手，难于精通！',
+                tags: ['益智', '地理', '规划'],
+                category: 'puzzle',
+                url: './LittleLogisticsPlanner/LogisticsPlanner.html',
+                color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+               
+            },
+            {
+                id: 1,
+                name: '智能消消乐',
+                icon: '🌊',
+                description: '地理知识趣味游戏！拖动支流卡片到对应的大河中，配对成功得分。学习中国河流知识的好帮手！',
+                tags: ['益智', '地理', '教育'],
+                category: 'puzzle',
+                url: './river-game/rivergame.html',
+                color: 'linear-gradient(135deg, #00BFFF 0%, #1E90FF 100%)'
+            },
+            {
+                id: 3,
+                name: '贪吃蛇大作战',
+                icon: '🐍',
+                description: '经典贪吃蛇游戏！控制小蛇吃食物，变长变强。注意不要撞到墙壁或自己！',
+                tags: ['动作', '经典', '街机'],
+                category: 'arcade',
+                url: '#snake',
+                color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            },
+            {
+                id: 4,
+                name: '俄罗斯方块',
+                icon: '🧱',
+                description: '永恒的经典！堆叠方块，消除满行，挑战极限速度。全球最受欢迎的益智游戏！',
+                tags: ['益智', '经典', '休闲'],
+                category: 'arcade',
+                url: '#tetris',
+                color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            },
+            {
+                id: 5,
+                name: '扫雷大冒险',
+                icon: '💣',
+                description: '经典扫雷游戏！找出所有地雷而不引爆。考验逻辑推理和运气的完美结合！',
+                tags: ['策略', '益智', '经典'],
+                category: 'strategy',
+                url: '#minesweeper',
+                color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            },
+            {
+                id: 6,
+                name: '井字棋大战',
+                icon: '⭕',
+                description: '简单有趣的井字棋！与朋友或AI对战，先连成三子获胜。适合所有年龄段！',
+                tags: ['休闲', '策略', '对战'],
+                category: 'strategy',
+                url: '#tictactoe',
+                color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            },
+            {
+                id: 7,
+                name: '记忆翻牌挑战',
+                icon: '🎴',
+                description: '考验记忆力的翻牌游戏！找出相同的卡片配对。挑战你的瞬间记忆能力！',
+                tags: ['益智', '记忆', '休闲'],
+                category: 'puzzle',
+                url: '#memory',
+                color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            },
+            {
+                id: 8,
+                name: '超级跳跃',
+                icon: '🦘',
+                description: '刺激的跳跃游戏！控制角色跳过障碍物，不断前进。简单操作，无尽挑战！',
+                tags: ['动作', '街机', '挑战'],
+                category: 'action',
+                url: '#jump',
+                color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            },
+            {
+                id: 9,
+                name: '乒乓球大战',
+                icon: '🏓',
+                description: '经典乒乓球游戏！与AI或好友对战，考验反应速度和预判能力。快节奏对决！',
+                tags: ['动作', '对战', '街机'],
+                category: 'action',
+                url: '#pingpong',
+                color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            },
+            {
+                id: 10,
+                name: '打地鼠大挑战',
+                icon: '🐹',
+                description: '经典打地鼠游戏！地鼠随机出现，快速点击得分。锻炼反应速度的好游戏！',
+                tags: ['动作', '休闲', '街机'],
+                category: 'arcade',
+                url: '#whack-a-mole',
+                color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            },
+            {
+                id: 11,
+                name: '弹珠台大师',
+                icon: '🎯',
+                description: '经典弹珠台游戏！弹射弹珠，获得高分。物理引擎驱动，真实弹珠体验！',
+                tags: ['街机', '动作', '休闲'],
+                category: 'arcade',
+                url: '#pinball',
+                color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            },
+            {
+                id: 12,
+                name: '泡泡龙传奇',
+                icon: '🫧',
+                description: '经典泡泡龙消除游戏！瞄准射击，相同颜色泡泡消除。策略与技巧并重！',
+                tags: ['益智', '休闲', '经典'],
+                category: 'puzzle',
+                url: '#bubble-shooter',
+                color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            }
+        ];
+
+        // 渲染游戏卡片
+        function renderGames(gamesToRender) {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+
+            if (gamesToRender.length === 0) {
+                document.getElementById('noResults').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noResults').style.display = 'none';
+
+            gamesToRender.forEach((game, index) => {
+                const card = document.createElement('a');
+                card.href = game.url;
+                card.className = 'game-card';
+                card.style.animationDelay = `${index * 0.05}s`;
+
+                card.innerHTML = `
+                    <div class="game-thumbnail" style="background: ${game.color}">
+                        <span class="game-icon">${game.icon}</span>
+                    </div>
+                    <div class="game-info">
+                        <h3 class="game-title">${game.name}</h3>
+                        <p class="game-description">${game.description}</p>
+                        <div class="game-tags">
+                            ${game.tags.map(tag => `<span class="game-tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const activeCategory = document.querySelector('.category-tag.active').dataset.category;
+
+            let filteredGames = games;
+
+            // 先按分类筛选
+            if (activeCategory !== 'all') {
+                filteredGames = filteredGames.filter(game => game.category === activeCategory);
+            }
+
+            // 再按搜索词筛选
+            if (searchTerm) {
+                filteredGames = filteredGames.filter(game =>
+                    game.name.toLowerCase().includes(searchTerm) ||
+                    game.description.toLowerCase().includes(searchTerm) ||
+                    game.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            renderGames(filteredGames);
+        });
+
+        // 分类筛选功能
+        const categoryTags = document.querySelectorAll('.category-tag');
+        categoryTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                // 移除所有active类
+                categoryTags.forEach(t => t.classList.remove('active'));
+                // 添加active类到当前点击的标签
+                tag.classList.add('active');
+
+                const category = tag.dataset.category;
+                const searchTerm = searchInput.value.toLowerCase();
+
+                let filteredGames = games;
+
+                // 先按分类筛选
+                if (category !== 'all') {
+                    filteredGames = filteredGames.filter(game => game.category === category);
+                }
+
+                // 再按搜索词筛选
+                if (searchTerm) {
+                    filteredGames = filteredGames.filter(game =>
+                        game.name.toLowerCase().includes(searchTerm) ||
+                        game.description.toLowerCase().includes(searchTerm) ||
+                        game.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+                    );
+                }
+
+                renderGames(filteredGames);
+            });
+        });
+
+        // 初始渲染所有游戏
+        renderGames(games);
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // 按ESC清空搜索
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+            // 按/键聚焦搜索框
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
