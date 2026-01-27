@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能消消乐 - 河流配对游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            color: white;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .mode-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: #333;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .mode-card .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .mode-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .mode-card p {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .mode-card.solo:hover {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
+        }
+
+        .mode-card.solo:hover h2,
+        .mode-card.solo:hover p {
+            color: white;
+        }
+
+        .mode-card.pk:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+        }
+
+        .mode-card.pk:hover h2,
+        .mode-card.pk:hover p {
+            color: white;
+        }
+
+        .game-info {
+            margin-top: 50px;
+            padding: 25px 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .game-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #fbbf24;
+        }
+
+        .river-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .river-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        .river-item strong {
+            color: #fbbf24;
+            font-size: 1.1rem;
+        }
+
+        .tributary-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .tributary-tag {
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                font-size: 4rem;
+            }
+
+            .mode-cards {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .river-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🌊</div>
+        <h1>智能消消乐</h1>
+        <p class="subtitle">河流配对游戏 - 寓教于乐</p>
+
+        <div class="mode-cards">
+            <div class="mode-card solo" onclick="location.href='solo.html'">
+                <div class="icon">🎮</div>
+                <h2>单人模式</h2>
+                <p>点击大河，从选项中选择正确的支流进行配对</p>
+                <p style="margin-top: 10px; font-size: 0.9rem;">适合：个人练习、学习地理知识</p>
+            </div>
+
+            <div class="mode-card pk" onclick="location.href='pk.html'">
+                <div class="icon">⚔️</div>
+                <h2>双人PK</h2>
+                <p>与朋友竞技，拖动支流到对应大河抢先完成配对</p>
+                <p style="margin-top: 10px; font-size: 0.9rem;">适合：双人竞技、娱乐互动</p>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <h3>🗺️ 河流知识</h3>
+            <div class="river-list">
+                <div class="river-item">
+                    <strong>🐉 长江</strong>
+                    <div class="tributary-tags">
+                        <span class="tributary-tag">岷江</span>
+                        <span class="tributary-tag">嘉陵江</span>
+                        <span class="tributary-tag">乌江</span>
+                        <span class="tributary-tag">湘江</span>
+                        <span class="tributary-tag">赣江</span>
+                        <span class="tributary-tag">汉江</span>
+                        <span class="tributary-tag">雅砻江</span>
+                    </div>
+                </div>
+                <div class="river-item">
+                    <strong>🟡 黄河</strong>
+                    <div class="tributary-tags">
+                        <span class="tributary-tag">渭河</span>
+                        <span class="tributary-tag">汾河</span>
+                        <span class="tributary-tag">湟水</span>
+                        <span class="tributary-tag">洮河</span>
+                        <span class="tributary-tag">无定河</span>
+                        <span class="tributary-tag">泾河</span>
+                        <span class="tributary-tag">洛河</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            💡 玩法提示：配对成功+10分，失败-5分
+        </footer>
+    </div>
+</body>
+</html>
