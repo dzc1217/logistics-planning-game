@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流规划小游戏</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 游戏头部 -->
+        <header class="game-header">
+            <h1>🚚 物流规划小游戏</h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <span class="stat-label">关卡</span>
+                    <span id="level" class="stat-value">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">得分</span>
+                    <span id="score" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">时间</span>
+                    <span id="timer" class="stat-value">05:00</span>
+                </div>
+                <div class="stat-item">
+                    <button id="soundToggle" class="btn btn-sound">🔊 音效</button>
+                </div>
+                <div class="stat-item">
+                    <button id="endGameBtn" class="btn btn-danger">结束游戏</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 游戏开始界面 -->
+        <div id="startScreen" class="screen active">
+            <div class="screen-content">
+                <h2>欢迎来到物流规划游戏！</h2>
+                <div class="game-rules">
+                    <h3>游戏规则：</h3>
+                    <ul>
+                        <li>📦 查看工单任务，了解优先级和要求</li>
+                        <li>🚛 选择合适的运输方式配送货物</li>
+                        <li>⏱️ 在限定时间内完成更多工单获得高分</li>
+                        <li>🎯 高优先级工单分值更高</li>
+                    </ul>
+                </div>
+                <button id="startBtn" class="btn btn-primary">开始游戏</button>
+            </div>
+        </div>
+
+        <!-- 游戏主界面 -->
+        <div id="gameScreen" class="screen">
+            <div class="game-layout">
+                <!-- 工单列表 -->
+                <div class="panel work-orders-panel">
+                    <h3>工单任务</h3>
+                    <div id="workOrdersList" class="work-orders-list"></div>
+                    
+                    <!-- 关卡进度条 -->
+                    <div class="level-progress">
+                        <div class="progress-info">
+                            <span class="progress-text">关卡进度</span>
+                            <span class="progress-count" id="progressCount">0/0</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                    </div>
+                </div>
+
+                <!-- 运输方式选择 -->
+                <div class="panel transport-panel">
+                    <h3>选择运输方式</h3>
+                    <div class="transport-options">
+                        <div class="transport-card" data-type="aviation">
+                            <div class="transport-icon">✈️</div>
+                            <div class="transport-info">
+                                <h4>航空运输</h4>
+                                <div class="transport-info-grid">
+                                    <p>载重：20000kg</p>
+                                    <p>速度：极快</p>
+                                    <p>成本：极高</p>
+                                    <p>适合：高价值、紧急货物</p>
+                                </div>
+                            </div>
+                            <div class="select-btn">选择</div>
+                        </div>
+                        <div class="transport-card" data-type="railway">
+                            <div class="transport-icon">🚂</div>
+                            <div class="transport-info">
+                                <h4>铁路运输</h4>
+                                <div class="transport-info-grid">
+                                    <p>载重：50000kg</p>
+                                    <p>速度：中快</p>
+                                    <p>成本：低</p>
+                                    <p>适合：大宗货物、长距离</p>
+                                </div>
+                            </div>
+                            <div class="select-btn">选择</div>
+                        </div>
+                        <div class="transport-card" data-type="waterway">
+                            <div class="transport-icon">🚢</div>
+                            <div class="transport-info">
+                                <h4>水路运输</h4>
+                                <div class="transport-info-grid">
+                                    <p>载重：100000kg</p>
+                                    <p>速度：慢</p>
+                                    <p>成本：极低</p>
+                                    <p>适合：超大体积、非紧急货物</p>
+                                </div>
+                            </div>
+                            <div class="select-btn">选择</div>
+                        </div>
+                        <div class="transport-card" data-type="highway">
+                            <div class="transport-icon">🚚</div>
+                            <div class="transport-info">
+                                <h4>公路运输</h4>
+                                <div class="transport-info-grid">
+                                    <p>载重：30000kg</p>
+                                    <p>速度：中</p>
+                                    <p>成本：中等</p>
+                                    <p>适合：中短途、灵活配送</p>
+                                </div>
+                            </div>
+                            <div class="select-btn">选择</div>
+                        </div>
+                        <div class="transport-card" data-type="pipeline">
+                            <div class="transport-icon">🔧</div>
+                            <div class="transport-info">
+                                <h4>管道运输</h4>
+                                <div class="transport-info-grid">
+                                    <p>载重：连续输送</p>
+                                    <p>速度：慢但稳定</p>
+                                    <p>成本：中等</p>
+                                    <p>适合：液体、气体、化工原料</p>
+                                </div>
+                            </div>
+                            <div class="select-btn">选择</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已分配任务 -->
+                <div class="panel assigned-tasks-panel">
+                    <h3>运输任务</h3>
+                    <div id="assignedTasks" class="assigned-tasks"></div>
+                    <div class="task-actions">
+                        <button id="completeTasksBtn" class="btn btn-success">完成任务</button>
+                        <button id="nextLevelBtn" class="btn btn-primary" style="display:none;">下一关</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div id="gameOverScreen" class="screen">
+            <div class="screen-content">
+                <h2 id="gameOverTitle">游戏结束！</h2>
+                <div class="final-stats">
+                    <p>最终得分：<span id="finalScore">0</span></p>
+                    <p>完成关卡：<span id="finalLevel">1</span></p>
+                    <p>完成任务数：<span id="completedCount">0</span></p>
+                </div>
+                <button id="restartBtn" class="btn btn-primary">重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
