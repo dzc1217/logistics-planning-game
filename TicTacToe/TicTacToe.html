@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋大作战</title>
+    <link rel="stylesheet" href="TicTacToe.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎮 井字棋大作战</h1>
+        
+        <!-- 主游戏区域（横向布局） -->
+        <div class="game-area">
+            <!-- 左侧：游戏控制 -->
+            <div class="game-controls">
+                <!-- 模式选择 -->
+                <div class="mode-selection">
+                    <button id="pvpBtn" class="mode-btn active">
+                        <span class="icon">👥</span>
+                        <span>双人对战</span>
+                    </button>
+                    <button id="pveBtn" class="mode-btn">
+                        <span class="icon">🤖</span>
+                        <span>人机对战</span>
+                    </button>
+                </div>
+
+                <!-- 当前回合提示 -->
+                <div class="turn-indicator">
+                    <span id="turnText">玩家 X 的回合</span>
+                </div>
+
+                <!-- 棋盘 -->
+                <div class="board" id="board">
+                    <div class="cell" data-index="0"></div>
+                    <div class="cell" data-index="1"></div>
+                    <div class="cell" data-index="2"></div>
+                    <div class="cell" data-index="3"></div>
+                    <div class="cell" data-index="4"></div>
+                    <div class="cell" data-index="5"></div>
+                    <div class="cell" data-index="6"></div>
+                    <div class="cell" data-index="7"></div>
+                    <div class="cell" data-index="8"></div>
+                </div>
+            </div>
+
+            <!-- 右侧：侧边栏 -->
+            <div class="sidebar">
+                <!-- 游戏说明 -->
+                <div class="instructions">
+                    <h3>📖 游戏说明</h3>
+                    <p>1. 玩家轮流在 3×3 棋盘上落子</p>
+                    <p>2. 先在横、竖、斜任意方向连成三子者获胜</p>
+                    <p>3. 人机模式下，你将与AI智能对战</p>
+                </div>
+
+                <!-- 计分板 -->
+                <div class="scoreboard">
+                    <div class="score-item">
+                        <div class="player-label">玩家 X</div>
+                        <div class="score-value" id="scoreX">0</div>
+                    </div>
+                    <div class="score-divider">:</div>
+                    <div class="score-item">
+                        <div class="player-label">玩家 O</div>
+                        <div class="score-value" id="scoreO">0</div>
+                    </div>
+                </div>
+
+                <!-- 游戏状态 -->
+                <div class="game-status" id="gameStatus"></div>
+
+                <!-- 重新开始按钮 -->
+                <button class="restart-btn" id="restartBtn">
+                    <span>🔄</span>
+                    <span>重新开始</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="TicTacToe.js"></script>
+</body>
+</html>
