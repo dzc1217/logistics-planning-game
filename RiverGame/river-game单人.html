@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能消消乐 - 河流配对游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.95);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item h3 {
+            color: #666;
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+
+        .score-item .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.6);
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .river-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .river {
+            background: linear-gradient(135deg, rgba(0,191,255,0.8) 0%, rgba(0,150,255,0.8) 100%);
+            border-radius: 10px;
+            padding: 12px;
+            min-height: 80px;
+            border: 2px dashed rgba(255,255,255,0.6);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .river::before {
+            content: '💧';
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.3;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 已移除拖拽高亮提示 */
+
+        .river-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tributary-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: flex-start;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
+
+        .tributary-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: grab;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            user-select: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tributary-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .tributary-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .matched-tributary {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 6px 12px;
+            margin: 3px;
+            border-radius: 6px;
+            display: inline-block;
+            animation: slideIn 0.3s ease;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 30px 50px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: popIn 0.3s ease;
+            display: none;
+        }
+
+        .left-section, .right-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .right-section {
+            height: 100%;
+        }
+
+        .river-container, .tributary-container {
+            flex: 1;
+            min-height: 0;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .success-message {
+            color: #22c55e;
+        }
+
+        .error-message {
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.8rem;
+            }
+
+            .tributary-card {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .river-name {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 智能消消乐</h1>
+            <p>拖动支流卡片到对应的大河中，配对成功得分！</p>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <h3>得分</h3>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <h3>配对成功</h3>
+                <div class="value" id="matched">0</div>
+            </div>
+            <div class="score-item">
+                <h3>剩余支流</h3>
+                <div class="value" id="remaining">0</div>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">🔄 重新开始</button>
+        </div>
+
+        <div class="game-area">
+            <div class="left-section">
+                <h2 class="section-title">🌊 大河目标区</h2>
+                <div class="river-container">
+                    <div class="river" data-river="长江">
+                        <div class="river-name">🐉 长江</div>
+                        <div class="matched-tributaries"></div>
+                    </div>
+                    <div class="river" data-river="黄河">
+                        <div class="river-name">🟡 黄河</div>
+                        <div class="matched-tributaries"></div>
+                    </div>
+                    <div class="river" data-river="珠江">
+                        <div class="river-name">💎 珠江</div>
+                        <div class="matched-tributaries"></div>
+                    </div>
+                    <div class="river" data-river="淮河">
+                        <div class="river-name">🌊 淮河</div>
+                        <div class="matched-tributaries"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <h2 class="section-title">🏔️ 支流卡片区</h2>
+                <div class="tributary-container" id="tributaryContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="message" id="message"></div>
+
+    <script>
+        // 游戏数据（只保留主要知名支流，移除冷门支流）
+        const gameData = {
+            长江: ['岷江', '嘉陵江', '乌江', '湘江', '赣江', '汉江','雅砻江','沅江'],
+            黄河: ['渭河', '汾河','无定河','湟水','洮河'],
+            珠江: ['东江', '北江'],
+            淮河: ['涡河', '颍河']
+        };
+
+        let score = 0;
+        let matchedCount = 0;
+        let totalTributaries = 0;
+        let currentDraggedCard = null;
+
+        // 初始化游戏
+        function initGame() {
+            score = 0;
+            matchedCount = 0;
+            totalTributaries = 0;
+            currentDraggedCard = null;
+
+            // 统计支流总数
+            Object.values(gameData).forEach(tributaries => {
+                totalTributaries += tributaries.length;
+            });
+
+            // 更新显示
+            updateScoreBoard();
+
+            // 生成支流卡片
+            generateTributaryCards();
+
+            // 清空已匹配区域
+            document.querySelectorAll('.matched-tributaries').forEach(el => {
+                el.innerHTML = '';
+            });
+
+            // 添加拖放事件监听
+            addDragAndDropListeners();
+        }
+
+        // 生成支流卡片
+        function generateTributaryCards() {
+            const container = document.getElementById('tributaryContainer');
+            container.innerHTML = '';
+
+            // 创建支流对象数组，用于打乱顺序
+            const tributaryList = [];
+            Object.entries(gameData).forEach(([river, tributaries]) => {
+                tributaries.forEach(tributary => {
+                    tributaryList.push({
+                        name: tributary,
+                        targetRiver: river
+                    });
+                });
+            });
+
+            // 打乱数组
+            shuffleArray(tributaryList);
+
+            // 创建卡片元素
+            tributaryList.forEach((tributary, index) => {
+                const card = document.createElement('div');
+                card.className = 'tributary-card';
+                card.textContent = tributary.name;
+                card.dataset.targetRiver = tributary.targetRiver;
+                card.draggable = true;
+                card.style.animationDelay = `${index * 0.05}s`;
+
+                container.appendChild(card);
+            });
+        }
+
+        // 打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 添加拖放事件监听
+        function addDragAndDropListeners() {
+            // 为所有支流卡片添加拖拽事件
+            const tributaryCards = document.querySelectorAll('.tributary-card');
+            tributaryCards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            // 为所有大河区域添加拖放事件
+            const rivers = document.querySelectorAll('.river');
+            rivers.forEach(river => {
+                river.addEventListener('dragover', handleDragOver);
+                river.addEventListener('dragenter', handleDragEnter);
+                river.addEventListener('dragleave', handleDragLeave);
+                river.addEventListener('drop', handleDrop);
+            });
+        }
+
+        // 拖拽开始
+        function handleDragStart(e) {
+            currentDraggedCard = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.targetRiver);
+        }
+
+        // 拖拽结束
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            currentDraggedCard = null;
+        }
+
+        // 拖拽经过
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        // 拖拽进入（已移除高亮提示）
+        function handleDragEnter(e) {
+            e.preventDefault();
+        }
+
+        // 拖拽离开（已移除高亮提示）
+        function handleDragLeave(e) {
+        }
+
+        // 拖拽放下
+        function handleDrop(e) {
+            e.preventDefault();
+            const river = e.target.closest('.river');
+            if (!river || !currentDraggedCard) return;
+
+            const targetRiver = river.dataset.river;
+            const cardTargetRiver = currentDraggedCard.dataset.targetRiver;
+
+            if (targetRiver === cardTargetRiver) {
+                // 匹配成功
+                handleMatchSuccess(river, currentDraggedCard);
+            } else {
+                // 匹配失败
+                handleMatchFailure(river);
+            }
+        }
+
+        // 匹配成功处理
+        function handleMatchSuccess(river, card) {
+            // 播放成功音效
+            playSound('success');
+
+            // 增加分数
+            score += 10;
+            matchedCount++;
+
+            // 将卡片移动到已匹配区域
+            const matchedContainer = river.querySelector('.matched-tributaries');
+            const matchedElement = document.createElement('div');
+            matchedElement.className = 'matched-tributary';
+            matchedElement.textContent = card.textContent;
+            matchedContainer.appendChild(matchedElement);
+
+            // 移除原卡片
+            card.remove();
+
+            // 更新显示
+            updateScoreBoard();
+
+            // 显示成功消息
+            showMessage('🎉 匹配成功！+10分', 'success');
+
+            // 检查游戏是否结束
+            if (matchedCount === totalTributaries) {
+                setTimeout(() => {
+                    showMessage('🏆 恭喜完成！总分: ' + score, 'success', 3000);
+                }, 1000);
+            }
+        }
+
+        // 匹配失败处理
+        function handleMatchFailure(river) {
+            // 播放失败音效
+            playSound('error');
+
+            // 扣分
+            score = Math.max(0, score - 5);
+
+            // 更新显示
+            updateScoreBoard();
+
+            // 显示失败消息
+            showMessage('❌ 匹配失败！-5分', 'error');
+        }
+
+        // 显示消息
+        function showMessage(text, type, duration = 1500) {
+            const message = document.getElementById('message');
+            const overlay = document.getElementById('overlay');
+
+            message.textContent = text;
+            message.className = 'message ' + type + '-message';
+            overlay.style.display = 'block';
+            message.style.display = 'block';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                message.style.display = 'none';
+            }, duration);
+        }
+
+        // 播放音效
+        function playSound(type) {
+            // 使用 Web Audio API 创建简单音效
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'success') {
+                // 成功音效：高音上行
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else {
+                // 失败音效：低音下行
+                oscillator.frequency.setValueAtTime(196, audioContext.currentTime); // G3
+                oscillator.frequency.setValueAtTime(164.81, audioContext.currentTime + 0.1); // E3
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+        }
+
+        // 更新记分板
+        function updateScoreBoard() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('matched').textContent = matchedCount;
+            document.getElementById('remaining').textContent = totalTributaries - matchedCount;
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            showMessage('🔄 游戏重新开始！', 'success', 1000);
+            setTimeout(() => {
+                initGame();
+            }, 500);
+        }
+
+        // 页面加载完成后初始化游戏
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

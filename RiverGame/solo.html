@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能消消乐 - 单人模式</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.95);
+            padding: 8px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-item h3 {
+            color: #666;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .info-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .back-btn, .restart-btn, .history-btn {
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-left: 6px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .history-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .back-btn:hover, .restart-btn:hover, .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+
+        /* 支流池 */
+        .tributary-pool {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            align-content: start;
+            overflow-y: auto;
+        }
+
+        .tributary-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 14px 20px;
+            border-radius: 10px;
+            cursor: grab;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            user-select: none;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tributary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .tributary-card.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            transform: scale(1.1) rotate(2deg);
+            z-index: 100;
+        }
+
+        .tributary-card.used {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            transform: none;
+        }
+
+        .tributary-card.correct {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .tributary-card.selected {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            border: 3px solid #fbbf24;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .tributary-card.wrong {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 河流目标区 */
+        .river-container {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .river-box {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border: 3px dashed rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+
+        .river-box.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+
+        .river-box .river-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .river-box .river-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .river-box .matched-area {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+            overflow-y: auto;
+            padding: 12px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+        }
+
+        .river-box .matched-item {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* 胜利弹窗 */
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .winner-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            animation: winnerPop 0.5s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        @keyframes winnerPop {
+            from { opacity: 0; transform: scale(0.3); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .winner-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .winner-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .winner-score {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .winner-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 0 10px;
+        }
+
+        .winner-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* 历史记录弹窗 */
+        .history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .history-content {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .history-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .history-item {
+            background: #f8fafc;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #22c55e;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .history-detail {
+            font-size: 1rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .history-close {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* ========== 移动端响应式优化 ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                margin-bottom: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .header p {
+                font-size: 0.8rem;
+            }
+
+            .game-info {
+                padding: 6px 10px;
+                margin-bottom: 5px;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .info-item h3 {
+                font-size: 0.7rem;
+            }
+
+            .info-item .value {
+                font-size: 1rem;
+            }
+
+            .back-btn, .restart-btn, .history-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+                margin-left: 3px;
+            }
+
+            .game-area {
+                gap: 8px;
+            }
+
+            .game-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr 1fr;
+                gap: 8px;
+            }
+
+            /* 支流池 - 移动端调整 */
+            .tributary-pool {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 10px;
+                gap: 6px;
+                max-height: 30vh;
+            }
+
+            .tributary-card {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+                min-height: 44px; /* 触摸友好 */
+            }
+
+            /* 河流区域 - 移动端调整 */
+            .river-container {
+                gap: 8px;
+            }
+
+            .river-box {
+                padding: 10px;
+            }
+
+            .river-box .river-name {
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+            }
+
+            .river-box .matched-area {
+                padding: 8px;
+                gap: 5px;
+            }
+
+            .river-box .matched-item {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+
+            /* 胜利弹窗 - 移动端调整 */
+            .winner-content {
+                padding: 30px 40px;
+                max-width: 90%;
+            }
+
+            .winner-title {
+                font-size: 1.8rem;
+            }
+
+            .winner-score {
+                font-size: 1.4rem;
+            }
+
+            .winner-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+
+            /* 历史记录弹窗 - 移动端调整 */
+            .history-content {
+                padding: 20px 25px;
+                max-width: 90%;
+            }
+
+            .history-title {
+                font-size: 1.4rem;
+            }
+
+            .history-item {
+                padding: 10px 12px;
+            }
+        }
+
+        /* 超小屏幕（手机竖屏）进一步优化 */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .header p {
+                font-size: 0.7rem;
+            }
+
+            .game-info {
+                padding: 5px 8px;
+            }
+
+            .info-item .value {
+                font-size: 0.9rem;
+            }
+
+            .back-btn, .restart-btn, .history-btn {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+
+            .tributary-pool {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 8px;
+            }
+
+            .tributary-card {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                min-height: 40px;
+            }
+
+            .river-box .river-name {
+                font-size: 1.1rem;
+            }
+
+            .river-box .matched-item {
+                font-size: 0.8rem;
+                padding: 5px 8px;
+            }
+
+            .winner-content {
+                padding: 25px 30px;
+            }
+
+            .winner-title {
+                font-size: 1.5rem;
+            }
+
+            .winner-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 智能消消乐 - 单人模式</h1>
+            <p>拖动支流卡片到对应的大河中进行配对！</p>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <h3>得分</h3>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <h3>配对成功</h3>
+                <div class="value" id="matched">0</div>
+            </div>
+            <div class="info-item">
+                <h3>剩余支流</h3>
+                <div class="value" id="remaining">0</div>
+            </div>
+            <div>
+                <button class="back-btn" onclick="location.href='index.html'">🏠 返回</button>
+                <button class="restart-btn" onclick="restartGame()">🔄 重新开始</button>
+                <button class="history-btn" onclick="showHistory()">📜 记录</button>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="game-container">
+                <!-- 支流池 -->
+                <div class="tributary-pool" id="tributaryPool"></div>
+
+                <!-- 河流目标区 -->
+                <div class="river-container">
+                    <div class="river-box" data-river="长江">
+                        <div class="river-header">
+                            <div class="river-name">🐉 长江</div>
+                        </div>
+                        <div class="matched-area" id="matched长江"></div>
+                    </div>
+                    <div class="river-box" data-river="黄河">
+                        <div class="river-header">
+                            <div class="river-name">🟡 黄河</div>
+                        </div>
+                        <div class="matched-area" id="matched黄河"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="winner-modal" id="winnerModal">
+        <div class="winner-content">
+            <div class="winner-icon">🏆</div>
+            <div class="winner-title">恭喜完成！</div>
+            <div class="winner-score" id="winnerScore">得分: 0</div>
+            <button class="winner-btn" onclick="restartGame()">🔄 再来一局</button>
+            <button class="winner-btn" onclick="location.href='index.html'">🏠 返回首页</button>
+        </div>
+    </div>
+
+    <div class="history-modal" id="historyModal">
+        <div class="history-content">
+            <h2 class="history-title">📜 游戏记录</h2>
+            <div id="historyList"></div>
+            <button class="winner-btn history-close" onclick="closeHistoryModal()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            长江: ['岷江', '嘉陵江', '乌江', '湘江', '赣江', '汉江', '雅砻江'],
+            黄河: ['渭河', '汾河', '湟水', '洮河', '无定河', '泾河', '洛河']
+        };
+
+        let score = 0;
+        let matchedCount = 0;
+        let totalTributaries = 0;
+        let currentDraggedCard = null;
+        let gameHistory = [];
+        let selectedCard = null; // 移动端选中的卡片
+
+        // ========== 移动端Touch拖拽支持变量 ==========
+        let touchDragElement = null;
+        let touchDragCard = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchCloneElement = null;
+        let touchCloneStartX = 0;
+        let touchCloneStartY = 0;
+        let touchLastCheckTime = 0;
+        let touchAnimationFrame = null;
+
+        function loadHistory() {
+            const saved = localStorage.getItem('soloGameHistory');
+            if (saved) {
+                gameHistory = JSON.parse(saved);
+            }
+        }
+
+        function saveHistory() {
+            localStorage.setItem('soloGameHistory', JSON.stringify(gameHistory));
+        }
+
+        function initGame() {
+            score = 0;
+            matchedCount = 0;
+            currentDraggedCard = null;
+
+            totalTributaries = 0;
+            Object.values(gameData).forEach(tributaries => {
+                totalTributaries += tributaries.length;
+            });
+
+            updateScoreBoard();
+            clearMatchedAreas();
+            generateTributaryPool();
+            addDragAndDropListeners();
+            loadHistory();
+        }
+
+        function clearMatchedAreas() {
+            document.getElementById('matched长江').innerHTML = '';
+            document.getElementById('matched黄河').innerHTML = '';
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('matched').textContent = matchedCount;
+            document.getElementById('remaining').textContent = totalTributaries - matchedCount;
+        }
+
+        function generateTributaryPool() {
+            const pool = document.getElementById('tributaryPool');
+            pool.innerHTML = '';
+
+            const tributaryList = [];
+            Object.entries(gameData).forEach(([river, tributaries]) => {
+                tributaries.forEach(tributary => {
+                    tributaryList.push({
+                        name: tributary,
+                        targetRiver: river,
+                        id: `trib-${tributary}`
+                    });
+                });
+            });
+
+            shuffleArray(tributaryList);
+
+            tributaryList.forEach(tributary => {
+                const card = document.createElement('div');
+                card.className = 'tributary-card';
+                card.textContent = tributary.name;
+                card.dataset.targetRiver = tributary.targetRiver;
+                card.dataset.id = tributary.id;
+                card.draggable = true;
+
+                pool.appendChild(card);
+            });
+        }
+
+        function addDragAndDropListeners() {
+            // 为所有支流卡片添加拖拽事件
+            const cards = document.querySelectorAll('.tributary-card');
+            cards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                // 移动端触摸支持 - 点击模式
+                card.addEventListener('click', handleCardClick);
+                // 移动端触摸支持 - 拖拽模式
+                card.addEventListener('touchstart', handleTouchStart, { passive: false });
+                card.addEventListener('touchmove', handleTouchMove, { passive: false });
+                card.addEventListener('touchend', handleTouchEnd);
+            });
+
+            // 为所有大河区域添加拖放事件
+            const rivers = document.querySelectorAll('.river-box');
+            rivers.forEach(river => {
+                river.addEventListener('dragover', handleDragOver);
+                river.addEventListener('dragenter', handleDragEnter);
+                river.addEventListener('dragleave', handleDragLeave);
+                river.addEventListener('drop', handleDrop);
+                // 移动端触摸支持
+                river.addEventListener('click', handleRiverClick);
+            });
+        }
+
+        // ========== 移动端Touch拖拽支持 ==========
+        function handleTouchStart(e) {
+            const card = e.target.closest('.tributary-card');
+            if (!card || card.classList.contains('used')) return;
+
+            e.preventDefault(); // 防止滚动
+
+            touchDragCard = card;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            // 创建克隆元素用于跟随手指
+            const rect = card.getBoundingClientRect();
+            touchCloneStartX = rect.left;
+            touchCloneStartY = rect.top;
+            
+            touchCloneElement = card.cloneNode(true);
+            touchCloneElement.style.position = 'fixed';
+            touchCloneElement.style.left = touchCloneStartX + 'px';
+            touchCloneElement.style.top = touchCloneStartY + 'px';
+            touchCloneElement.style.width = rect.width + 'px';
+            touchCloneElement.style.height = rect.height + 'px';
+            touchCloneElement.style.zIndex = '9999';
+            touchCloneElement.style.pointerEvents = 'none';
+            touchCloneElement.style.opacity = '0.8';
+            touchCloneElement.style.transform = 'scale(1.1)';
+            touchCloneElement.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            touchCloneElement.style.transition = 'none';
+            touchCloneElement.style.willChange = 'transform';
+            touchCloneElement.classList.add('touch-dragging');
+            document.body.appendChild(touchCloneElement);
+
+            // 原始卡片半透明
+            card.style.opacity = '0.3';
+
+            // 震动反馈
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (!touchCloneElement) return;
+
+            e.preventDefault(); // 防止滚动
+
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            // 使用transform移动，性能更好
+            touchCloneElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1)`;
+
+            // 节流检测：每50ms检测一次，避免性能问题
+            const now = Date.now();
+            if (now - touchLastCheckTime < 50) {
+                return;
+            }
+            touchLastCheckTime = now;
+
+            // 检测是否悬停在河流上方
+            const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+            const riverBox = elements.find(el => el.classList.contains('river-box'));
+
+            // 移除所有悬停效果
+            document.querySelectorAll('.river-box').forEach(box => {
+                box.classList.remove('drag-over');
+            });
+
+            // 添加悬停效果
+            if (riverBox) {
+                riverBox.classList.add('drag-over');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchCloneElement || !touchDragCard) return;
+
+            const touch = e.changedTouches[0];
+
+            // 移除克隆元素
+            document.body.removeChild(touchCloneElement);
+            touchCloneElement = null;
+
+            // 恢复原始卡片
+            touchDragCard.style.opacity = '1';
+
+            // 移除所有悬停效果
+            document.querySelectorAll('.river-box').forEach(box => {
+                box.classList.remove('drag-over');
+            });
+
+            // 检测放置位置
+            const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+            const riverBox = elements.find(el => el.classList.contains('river-box'));
+
+            if (riverBox) {
+                const targetRiver = riverBox.dataset.river;
+                const cardTargetRiver = touchDragCard.dataset.targetRiver;
+
+                if (targetRiver === cardTargetRiver) {
+                    // 匹配成功
+                    handleMatchSuccess(riverBox, touchDragCard);
+                } else {
+                    // 匹配失败
+                    handleMatchFailure(touchDragCard);
+                }
+            }
+
+            touchDragCard = null;
+        }
+
+        // ========== 移动端点击支持（备选方案）==========
+        function handleCardClick(e) {
+            const card = e.target.closest('.tributary-card');
+            if (!card || card.classList.contains('used')) return;
+
+            // 清除之前的选中状态
+            document.querySelectorAll('.tributary-card.selected').forEach(c => {
+                c.classList.remove('selected');
+            });
+
+            // 选中当前卡片
+            selectedCard = card;
+            card.classList.add('selected');
+
+            // 震动反馈（如果设备支持）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function handleRiverClick(e) {
+            const riverBox = e.target.closest('.river-box');
+            if (!riverBox || !selectedCard) return;
+
+            const targetRiver = riverBox.dataset.river;
+            const cardTargetRiver = selectedCard.dataset.targetRiver;
+
+            if (targetRiver === cardTargetRiver) {
+                // 匹配成功
+                handleMatchSuccess(riverBox, selectedCard);
+            } else {
+                // 匹配失败
+                handleMatchFailure(selectedCard);
+            }
+
+            // 清除选中状态
+            selectedCard.classList.remove('selected');
+            selectedCard = null;
+        }
+
+        function handleDragStart(e) {
+            if (e.target.classList.contains('used')) {
+                e.preventDefault();
+                return;
+            }
+            currentDraggedCard = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.targetRiver);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            currentDraggedCard = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            const riverBox = e.target.closest('.river-box');
+            if (riverBox) {
+                riverBox.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const riverBox = e.target.closest('.river-box');
+            if (riverBox && !riverBox.contains(e.relatedTarget)) {
+                riverBox.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const riverBox = e.target.closest('.river-box');
+            if (!riverBox || !currentDraggedCard) {
+                return;
+            }
+
+            riverBox.classList.remove('drag-over');
+
+            const targetRiver = riverBox.dataset.river;
+            const cardTargetRiver = currentDraggedCard.dataset.targetRiver;
+
+            if (targetRiver === cardTargetRiver) {
+                // 匹配成功
+                handleMatchSuccess(riverBox, currentDraggedCard);
+            } else {
+                // 匹配失败
+                handleMatchFailure(currentDraggedCard);
+            }
+        }
+
+        function handleMatchSuccess(riverBox, card) {
+            playSound('success');
+
+            score += 10;
+            matchedCount++;
+
+            // 卡片变为正确样式
+            card.classList.add('correct');
+
+            // 延迟后从DOM中移除卡片
+            setTimeout(() => {
+                card.remove();
+            }, 500);
+
+            // 在匹配区域显示
+            const matchedArea = document.getElementById(`matched${riverBox.dataset.river}`);
+            const matchedElement = document.createElement('div');
+            matchedElement.className = 'matched-item';
+            matchedElement.textContent = card.textContent;
+            matchedArea.appendChild(matchedElement);
+
+            updateScoreBoard();
+
+            if (matchedCount === totalTributaries) {
+                setTimeout(() => {
+                    handleGameEnd();
+                }, 1000);
+            }
+        }
+
+        function handleMatchFailure(card) {
+            playSound('error');
+
+            score = Math.max(0, score - 5);
+            updateScoreBoard();
+
+            // 卡片变为错误样式
+            card.classList.add('wrong');
+
+            // 延迟后恢复
+            setTimeout(() => {
+                card.classList.remove('wrong');
+            }, 500);
+        }
+
+        function handleGameEnd() {
+            const now = new Date();
+            const dateStr = now.toLocaleString('zh-CN');
+
+            const modal = document.getElementById('winnerModal');
+            document.getElementById('winnerScore').textContent = `得分: ${score}`;
+            modal.style.display = 'flex';
+
+            gameHistory.unshift({
+                date: dateStr,
+                score: score,
+                detail: `得分: ${score}`
+            });
+
+            if (gameHistory.length > 20) {
+                gameHistory = gameHistory.slice(0, 20);
+            }
+
+            saveHistory();
+        }
+
+        function showHistory() {
+            const modal = document.getElementById('historyModal');
+            const list = document.getElementById('historyList');
+
+            if (gameHistory.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无游戏记录</div>';
+            } else {
+                list.innerHTML = gameHistory.map(record => `
+                    <div class="history-item">
+                        <div class="history-date">${record.date}</div>
+                        <div class="history-detail">${record.detail}</div>
+                    </div>
+                `).join('');
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        function restartGame() {
+            document.getElementById('winnerModal').style.display = 'none';
+            closeHistoryModal();
+            setTimeout(() => {
+                initGame();
+            }, 300);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'success') {
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else {
+                oscillator.frequency.setValueAtTime(196, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(164.81, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+        }
+
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
