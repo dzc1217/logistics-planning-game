@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能消消乐 - 双人PK</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            padding: 8px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 3px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 6px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-item h3 {
+            color: #666;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .info-item .value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .back-btn, .restart-btn {
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-left: 6px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .back-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .pk-area {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .player-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border: 3px solid;
+        }
+
+        .player-section.player1 {
+            border-color: #3b82f6;
+        }
+
+        .player-section.player2 {
+            border-color: #ef4444;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+            gap: 10px;
+        }
+
+        .player-header h3 {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .player-header .score {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .player-header .player-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #666;
+            background: rgba(0,0,0,0.05);
+            padding: 5px 12px;
+            border-radius: 8px;
+        }
+
+        .player-section.player1 .player-header .score {
+            color: #3b82f6;
+        }
+
+        .player-section.player2 .player-header .score {
+            color: #ef4444;
+        }
+
+        /* 拖动区域 */
+        .drop-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex: 0 0 auto;
+            margin-bottom: 10px;
+        }
+
+        .river-target {
+            background: linear-gradient(135deg, rgba(0,191,255,0.9) 0%, rgba(0,150,255,0.9) 100%);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 120px;
+            border: 3px dashed rgba(255,255,255,0.6);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .river-target .river-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .river-target .matched-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .river-target .matched-item {
+            background: rgba(255,255,255,0.9);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #0ea5e9;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 支流池 */
+        .tributary-pool {
+            flex: 1;
+            min-height: 0;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            align-content: start;
+            overflow-y: auto;
+        }
+
+        .tributary-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: grab;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            user-select: none;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tributary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .tributary-card.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            transform: scale(1.1) rotate(2deg);
+            z-index: 100;
+        }
+
+        .tributary-card.used {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            transform: none;
+        }
+
+        .tributary-card.correct {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            animation: correctPulse 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .tributary-card.wrong {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            animation: wrongShake 0.5s ease;
+        }
+
+        .tributary-card.selected {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            border: 3px solid #fbbf24;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 分数变化提示 */
+        .score-change {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 6px;
+            animation: scoreFloat 1s ease forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-30px);
+            }
+        }
+
+        .score-change.plus {
+            background: #22c55e;
+            color: white;
+        }
+
+        .score-change.minus {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* 胜利弹窗 */
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .winner-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            animation: winnerPop 0.5s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        @keyframes winnerPop {
+            from { opacity: 0; transform: scale(0.3); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .winner-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .winner-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .winner-score {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+
+        .winner-time {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .winner-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 0 10px;
+        }
+
+        .winner-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ========== 移动端响应式优化 ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                margin-bottom: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .header p {
+                font-size: 0.8rem;
+            }
+
+            .game-info {
+                padding: 6px 10px;
+                margin-bottom: 5px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .info-item h3 {
+                font-size: 0.7rem;
+            }
+
+            .info-item .value {
+                font-size: 0.9rem;
+            }
+
+            .back-btn, .restart-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+                margin-left: 3px;
+            }
+
+            /* 双人区域 - 移动端改为上下布局 */
+            .pk-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                gap: 8px;
+                overflow: hidden;
+            }
+
+            .player-section {
+                padding: 6px;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            .player-header {
+                margin-bottom: 6px;
+                padding-bottom: 4px;
+                gap: 4px;
+            }
+
+            .player-header h3 {
+                font-size: 0.9rem;
+            }
+
+            .player-header .score {
+                font-size: 1.3rem;
+            }
+
+            .player-header .player-time {
+                font-size: 0.9rem;
+                padding: 3px 8px;
+            }
+
+            /* 拖动区域 - 更紧凑 */
+            .drop-zone {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+                margin-bottom: 6px;
+                flex: 0 0 auto;
+            }
+
+            .river-target {
+                min-height: 70px;
+                padding: 6px 8px;
+                border-width: 2px;
+            }
+
+            .river-target .river-name {
+                font-size: 0.9rem;
+                margin-bottom: 4px;
+            }
+
+            .river-target .matched-item {
+                font-size: 0.75rem;
+                padding: 3px 8px;
+            }
+
+            /* 支流池 - 可滚动 */
+            .tributary-pool {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+                padding: 6px;
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+            }
+
+            .tributary-card {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+                min-height: 40px; /* 触摸友好 */
+            }
+
+            /* 分数变化提示 */
+            .score-change {
+                font-size: 1rem;
+                padding: 3px 8px;
+            }
+
+            /* 胜利弹窗 */
+            .winner-content {
+                padding: 30px 40px;
+                max-width: 90%;
+            }
+
+            .winner-title {
+                font-size: 1.8rem;
+            }
+
+            .winner-score {
+                font-size: 1.4rem;
+            }
+
+            .winner-time {
+                font-size: 1.2rem;
+            }
+
+            .winner-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 超小屏幕（手机竖屏）进一步优化 */
+        @media (max-width: 480px) {
+            body {
+                padding: 3px;
+            }
+
+            .header {
+                margin-bottom: 3px;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .header p {
+                font-size: 0.7rem;
+            }
+
+            .game-info {
+                padding: 4px 8px;
+                gap: 5px;
+            }
+
+            .player-header h3 {
+                font-size: 0.85rem;
+            }
+
+            .player-header .score {
+                font-size: 1.2rem;
+            }
+
+            .player-header .player-time {
+                font-size: 0.85rem;
+                padding: 2px 6px;
+            }
+
+            .pk-area {
+                gap: 5px;
+            }
+
+            .player-section {
+                padding: 4px;
+            }
+
+            .drop-zone {
+                gap: 3px;
+                margin-bottom: 4px;
+            }
+
+            .river-target {
+                min-height: 60px;
+                padding: 5px 6px;
+            }
+
+            .river-target .river-name {
+                font-size: 0.85rem;
+                margin-bottom: 3px;
+            }
+
+            .river-target .matched-item {
+                font-size: 0.7rem;
+                padding: 2px 6px;
+            }
+
+            .tributary-pool {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px;
+                padding: 4px;
+            }
+
+            .tributary-card {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+                min-height: 36px;
+            }
+
+            .winner-content {
+                padding: 20px 25px;
+            }
+
+            .winner-title {
+                font-size: 1.5rem;
+            }
+
+            .winner-icon {
+                font-size: 3rem;
+            }
+
+            .winner-score {
+                font-size: 1.2rem;
+            }
+
+            .winner-time {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 智能消消乐 - 双人PK</h1>
+            <p>拖动支流卡片到对应的大河中，抢先完成配对！</p>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <h3>总配对数</h3>
+                <div class="value" id="totalMatched">0</div>
+            </div>
+            <div class="info-item">
+                <h3>剩余支流</h3>
+                <div class="value" id="remaining">0</div>
+            </div>
+            <div class="info-item">
+                <h3>⏱️ 用时</h3>
+                <div class="value" id="gameTime">00:00</div>
+            </div>
+            <div>
+                <button class="back-btn" onclick="location.href='index.html'">🏠 返回</button>
+                <button class="restart-btn" onclick="restartGame()">🔄 重新开始</button>
+            </div>
+        </div>
+
+        <div class="pk-area">
+            <!-- 玩家1区域 -->
+            <div class="player-section player1">
+                <div class="player-header">
+                    <h3>🔵 玩家1</h3>
+                    <div class="score" id="player1Score">0</div>
+                    <div class="player-time" id="player1Time">00:00</div>
+                </div>
+                <div class="drop-zone">
+                    <div class="river-target" data-river="长江" data-player="1">
+                        <div class="river-name">🐉 长江</div>
+                        <div class="matched-items" id="p1Matched长江"></div>
+                    </div>
+                    <div class="river-target" data-river="黄河" data-player="1">
+                        <div class="river-name">🟡 黄河</div>
+                        <div class="matched-items" id="p1Matched黄河"></div>
+                    </div>
+                </div>
+                <div class="tributary-pool" id="player1Pool"></div>
+            </div>
+
+            <!-- 玩家2区域 -->
+            <div class="player-section player2">
+                <div class="player-header">
+                    <h3>🔴 玩家2</h3>
+                    <div class="score" id="player2Score">0</div>
+                    <div class="player-time" id="player2Time">00:00</div>
+                </div>
+                <div class="drop-zone">
+                    <div class="river-target" data-river="长江" data-player="2">
+                        <div class="river-name">🐉 长江</div>
+                        <div class="matched-items" id="p2Matched长江"></div>
+                    </div>
+                    <div class="river-target" data-river="黄河" data-player="2">
+                        <div class="river-name">🟡 黄河</div>
+                        <div class="matched-items" id="p2Matched黄河"></div>
+                    </div>
+                </div>
+                <div class="tributary-pool" id="player2Pool"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="winner-modal" id="winnerModal">
+        <div class="winner-content">
+            <div class="winner-icon">🏆</div>
+            <div class="winner-title" id="winnerTitle">玩家1 获胜!</div>
+            <div class="winner-score" id="winnerScore">得分: P1 0 - P2 0</div>
+            <div class="winner-time" id="winnerTime">用时: P1 00:00 - P2 00:00</div>
+            <button class="winner-btn" onclick="restartGame()">🔄 再来一局</button>
+            <button class="winner-btn" onclick="location.href='index.html'">🏠 返回首页</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            长江: ['岷江', '嘉陵江', '乌江', '湘江', '赣江', '汉江', '雅砻江'],
+            黄河: ['渭河', '汾河', '湟水', '洮河', '无定河', '泾河', '洛河']
+        };
+
+        let player1Score = 0;
+        let player2Score = 0;
+        let totalMatched = 0;
+        let totalTributaries = 0;
+        let currentDraggedCard = null;
+        let currentDraggedPlayer = null;
+        let selectedCard = null; // 移动端选中的卡片
+        let selectedPlayer = null; // 移动端选中的玩家
+
+        // ========== 移动端多点触控支持 ==========
+        // 使用 Map 存储每个触摸点的状态，支持多人同时操作
+        const touchStates = new Map(); // key: touch.identifier, value: { card, player, startX, startY, cloneElement }
+
+        // 计时器相关变量
+        let gameTimer = null;
+        let gameStartTime = null;
+        let player1ElapsedTime = 0;
+        let player2ElapsedTime = 0;
+
+        function initGame() {
+            // 停止之前的计时器
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+
+            player1Score = 0;
+            player2Score = 0;
+            totalMatched = 0;
+            currentDraggedCard = null;
+            currentDraggedPlayer = null;
+            selectedCard = null;
+            selectedPlayer = null;
+            player1ElapsedTime = 0;
+            player2ElapsedTime = 0;
+            gameStartTime = Date.now();
+
+            totalTributaries = 0;
+            Object.values(gameData).forEach(tributaries => {
+                totalTributaries += tributaries.length;
+            });
+
+            updateScoreBoard();
+            updateTimeDisplay();
+            clearMatchedAreas();
+            generatePools();
+            addDragAndDropListeners();
+
+            // 启动游戏计时器
+            startGameTimer();
+        }
+
+        function startGameTimer() {
+            gameTimer = setInterval(() => {
+                const now = Date.now();
+                const elapsed = Math.floor((now - gameStartTime) / 1000);
+
+                // 更新游戏总用时显示
+                document.getElementById('gameTime').textContent = formatTime(elapsed);
+
+                // 更新玩家各自的用时（这里简化为显示游戏总用时）
+                document.getElementById('player1Time').textContent = formatTime(elapsed);
+                document.getElementById('player2Time').textContent = formatTime(elapsed);
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateTimeDisplay() {
+            document.getElementById('gameTime').textContent = '00:00';
+            document.getElementById('player1Time').textContent = '00:00';
+            document.getElementById('player2Time').textContent = '00:00';
+        }
+
+        function clearMatchedAreas() {
+            ['p1Matched长江', 'p1Matched黄河', 'p2Matched长江', 'p2Matched黄河'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('player1Score').textContent = player1Score;
+            document.getElementById('player2Score').textContent = player2Score;
+            document.getElementById('totalMatched').textContent = totalMatched;
+            document.getElementById('remaining').textContent = totalTributaries - totalMatched;
+        }
+
+        function generatePools() {
+            ['player1Pool', 'player2Pool'].forEach(poolId => {
+                const pool = document.getElementById(poolId);
+                pool.innerHTML = '';
+
+                const tributaryList = [];
+                Object.entries(gameData).forEach(([river, tributaries]) => {
+                    tributaries.forEach(tributary => {
+                        tributaryList.push({
+                            name: tributary,
+                            targetRiver: river,
+                            id: `${poolId}-${tributary}`
+                        });
+                    });
+                });
+
+                shuffleArray(tributaryList);
+
+                tributaryList.forEach(tributary => {
+                    const card = document.createElement('div');
+                    card.className = 'tributary-card';
+                    card.textContent = tributary.name;
+                    card.dataset.targetRiver = tributary.targetRiver;
+                    card.dataset.id = tributary.id;
+                    card.dataset.pool = poolId;
+                    card.draggable = true;
+
+                    pool.appendChild(card);
+                });
+            });
+        }
+
+        function addDragAndDropListeners() {
+            // 为所有支流卡片添加拖拽事件
+            const cards = document.querySelectorAll('.tributary-card');
+            cards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                // 移动端触摸支持 - 点击模式
+                card.addEventListener('click', handleCardClick);
+                // 移动端触摸支持 - 拖拽模式
+                card.addEventListener('touchstart', handleTouchStart, { passive: false });
+                card.addEventListener('touchmove', handleTouchMove, { passive: false });
+                card.addEventListener('touchend', handleTouchEnd);
+            });
+
+            // 为所有大河区域添加拖放事件
+            const rivers = document.querySelectorAll('.river-target');
+            rivers.forEach(river => {
+                river.addEventListener('dragover', handleDragOver);
+                river.addEventListener('dragdrop', handleDragEnter);
+                river.addEventListener('dragleave', handleDragLeave);
+                river.addEventListener('drop', handleDrop);
+                // 移动端触摸支持
+                river.addEventListener('click', handleRiverClick);
+            });
+        }
+
+        // ========== 移动端多点触控支持 ==========
+        function handleTouchStart(e) {
+            // 支持多点触控 - 每个触摸点独立处理
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const card = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.tributary-card');
+                
+                if (!card || card.classList.contains('used')) continue;
+
+                e.preventDefault(); // 防止滚动
+
+                const pool = card.closest('.player-section');
+                const player = pool ? (pool.classList.contains('player1') ? 1 : 2) : null;
+
+                console.log('========== Touch Start (ID: ' + touch.identifier + ') ==========');
+                console.log('Player:', player, 'Card:', card.textContent);
+
+                // 创建克隆元素用于跟随手指
+                const rect = card.getBoundingClientRect();
+                const cloneElement = card.cloneNode(true);
+                cloneElement.style.position = 'fixed';
+                cloneElement.style.left = rect.left + 'px';
+                cloneElement.style.top = rect.top + 'px';
+                cloneElement.style.width = rect.width + 'px';
+                cloneElement.style.height = rect.height + 'px';
+                cloneElement.style.zIndex = '9999';
+                cloneElement.style.pointerEvents = 'none';
+                cloneElement.style.opacity = '0.8';
+                cloneElement.style.transform = 'scale(1.1)';
+                cloneElement.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                cloneElement.style.transition = 'none';
+                cloneElement.style.willChange = 'transform';
+                cloneElement.classList.add('touch-dragging');
+                document.body.appendChild(cloneElement);
+
+                // 原始卡片半透明
+                card.style.opacity = '0.3';
+
+                // 存储触摸状态
+                touchStates.set(touch.identifier, {
+                    card: card,
+                    player: player,
+                    startX: touch.clientX,
+                    startY: touch.clientY,
+                    cloneElement: cloneElement,
+                    rect: rect
+                });
+
+                // 震动反馈
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+            }
+        }
+
+        function handleTouchMove(e) {
+            // 处理所有移动的触摸点
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const state = touchStates.get(touch.identifier);
+
+                if (!state) continue;
+
+                e.preventDefault(); // 防止滚动
+
+                const deltaX = touch.clientX - state.startX;
+                const deltaY = touch.clientY - state.startY;
+
+                // 使用transform移动，性能更好
+                state.cloneElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1)`;
+
+                // 检测是否悬停在河流上方
+                const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+                const riverTarget = elements.find(el => el.classList.contains('river-target'));
+
+                // 移除该玩家所有河流的悬停效果
+                document.querySelectorAll(`.player${state.player} .river-target`).forEach(river => {
+                    river.classList.remove('drag-over');
+                });
+
+                // 添加悬停效果（只在同一玩家区域）
+                if (riverTarget) {
+                    const targetPlayer = parseInt(riverTarget.dataset.player || '0');
+                    if (targetPlayer === state.player) {
+                        riverTarget.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            // 处理所有结束的触摸点
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const state = touchStates.get(touch.identifier);
+
+                if (!state) continue;
+
+                // 移除克隆元素
+                document.body.removeChild(state.cloneElement);
+
+                // 恢复原始卡片
+                state.card.style.opacity = '1';
+
+                // 移除悬停效果
+                document.querySelectorAll('.river-target').forEach(river => {
+                    river.classList.remove('drag-over');
+                });
+
+                // 检测放置位置
+                const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+                const riverTarget = elements.find(el => el.classList.contains('river-target'));
+
+                console.log('========== Touch End (ID: ' + touch.identifier + ') ==========');
+                console.log('Player:', state.player, 'Card:', state.card.textContent);
+                console.log('Found riverTarget:', !!riverTarget);
+
+                if (riverTarget) {
+                    const targetRiver = riverTarget.dataset.river;
+                    const cardTargetRiver = state.card.dataset.targetRiver;
+                    const targetPlayer = parseInt(riverTarget.dataset.player || '0');
+
+                    console.log('Match check:', { targetPlayer, player: state.player, targetRiver, cardTargetRiver });
+
+                    // 只能在同一玩家区域内放置
+                    if (targetPlayer === state.player) {
+                        if (targetRiver === cardTargetRiver) {
+                            console.log('✓ Match success!');
+                            // 匹配成功
+                            handleMatchSuccess(riverTarget, state.card, state.player);
+                        } else {
+                            console.log('✗ River mismatch');
+                            // 匹配失败
+                            handleMatchFailure(state.card, state.player);
+                        }
+                    } else {
+                        console.log('✗ Different player area');
+                    }
+                }
+
+                // 清除触摸状态
+                touchStates.delete(touch.identifier);
+            }
+        }
+
+        // ========== 移动端点击支持（备选方案）==========
+        function handleCardClick(e) {
+            const card = e.target.closest('.tributary-card');
+            if (!card || card.classList.contains('used')) return;
+
+            // 获取玩家编号
+            const pool = card.closest('.player-section');
+            const player = pool ? (pool.classList.contains('player1') ? 1 : 2) : null;
+
+            // 清除之前的选中状态
+            document.querySelectorAll('.tributary-card.selected').forEach(c => {
+                c.classList.remove('selected');
+            });
+
+            // 选中当前卡片
+            selectedCard = card;
+            selectedPlayer = player;
+            card.classList.add('selected');
+
+            // 震动反馈（如果设备支持）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function handleRiverClick(e) {
+            const riverTarget = e.target.closest('.river-target');
+            const playerSection = e.target.closest('.player-section');
+            if (!riverTarget || !selectedCard || !playerSection) return;
+
+            // 确保是同一玩家的区域
+            const currentPlayer = playerSection.classList.contains('player1') ? 1 : 2;
+            if (currentPlayer !== selectedPlayer) return;
+
+            const targetRiver = riverTarget.dataset.river;
+            const cardTargetRiver = selectedCard.dataset.targetRiver;
+
+            if (targetRiver === cardTargetRiver) {
+                // 匹配成功
+                if (selectedPlayer === 1) {
+                    handleMatchSuccessPlayer1(riverTarget, selectedCard);
+                } else {
+                    handleMatchSuccessPlayer2(riverTarget, selectedCard);
+                }
+            } else {
+                // 匹配失败
+                handleMatchFailure(selectedCard, selectedPlayer);
+            }
+
+            // 清除选中状态
+            selectedCard.classList.remove('selected');
+            selectedCard = null;
+            selectedPlayer = null;
+        }
+
+        function handleDragStart(e) {
+            if (e.target.classList.contains('used')) {
+                e.preventDefault();
+                return;
+            }
+            currentDraggedCard = e.target;
+            const pool = e.target.closest('.player-section');
+            currentDraggedPlayer = pool ? pool.classList.contains('player1') ? 1 : 2 : null;
+
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.targetRiver);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            currentDraggedCard = null;
+            currentDraggedPlayer = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+        }
+
+        function handleDragLeave(e) {
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const riverBox = e.target.closest('.river-target');
+            if (!riverBox || !currentDraggedCard) return;
+
+            const targetRiver = riverBox.dataset.river;
+            const player = parseInt(riverBox.dataset.player);
+            const cardTargetRiver = currentDraggedCard.dataset.targetRiver;
+
+            // 检查是否是同一玩家的卡片
+            if (player !== currentDraggedPlayer) {
+                return;
+            }
+
+            if (targetRiver === cardTargetRiver) {
+                // 匹配成功
+                handleMatchSuccess(riverBox, currentDraggedCard, player);
+            } else {
+                // 匹配失败
+                handleMatchFailure(currentDraggedCard, player);
+            }
+        }
+
+        function handleMatchSuccess(riverBox, card, player) {
+            playSound('success');
+
+            const points = 10;
+            totalMatched++;
+
+            if (player === 1) {
+                player1Score += points;
+            } else {
+                player2Score += points;
+            }
+
+            // 在卡片上显示分数变化
+            showScoreChange(card, '+10', 'plus');
+
+            // 卡片变为正确样式
+            card.classList.add('correct');
+
+            // 延迟后从DOM中移除卡片
+            setTimeout(() => {
+                card.remove();
+            }, 500);
+
+            // 在匹配区域显示
+            const matchedArea = document.getElementById(`p${player}Matched${riverBox.dataset.river}`);
+            const matchedElement = document.createElement('div');
+            matchedElement.className = 'matched-item';
+            matchedElement.textContent = card.textContent;
+            matchedArea.appendChild(matchedElement);
+
+            updateScoreBoard();
+
+            // 检查游戏是否结束
+            if (totalMatched === totalTributaries) {
+                setTimeout(() => {
+                    handleGameEnd();
+                }, 1000);
+            }
+        }
+
+        function handleMatchFailure(card, player) {
+            playSound('error');
+
+            const penalty = 5;
+
+            if (player === 1) {
+                player1Score = Math.max(0, player1Score - penalty);
+            } else {
+                player2Score = Math.max(0, player2Score - penalty);
+            }
+
+            // 在卡片上显示分数变化
+            showScoreChange(card, '-5', 'minus');
+
+            // 卡片变为错误样式
+            card.classList.add('wrong');
+
+            // 延迟后恢复
+            setTimeout(() => {
+                card.classList.remove('wrong');
+            }, 500);
+
+            updateScoreBoard();
+        }
+
+        function showScoreChange(card, text, type) {
+            const change = document.createElement('div');
+            change.className = `score-change ${type}`;
+            change.textContent = text;
+            card.appendChild(change);
+
+            setTimeout(() => {
+                change.remove();
+            }, 1000);
+        }
+
+        function handleGameEnd() {
+            // 停止计时器
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+
+            // 计算最终用时
+            const finalTime = Math.floor((Date.now() - gameStartTime) / 1000);
+            const formattedTime = formatTime(finalTime);
+
+            const modal = document.getElementById('winnerModal');
+            const title = document.getElementById('winnerTitle');
+            const scoreText = document.getElementById('winnerScore');
+            const timeText = document.getElementById('winnerTime');
+
+            let winner;
+            if (player1Score > player2Score) {
+                winner = 1;
+            } else if (player2Score > player1Score) {
+                winner = 2;
+            } else {
+                winner = 0;
+            }
+
+            if (winner === 0) {
+                title.textContent = '🤝 平局！';
+                title.style.color = '#f59e0b';
+            } else {
+                title.textContent = `🏆 玩家${winner} 获胜! ${winner === 1 ? '🔵' : '🔴'}`;
+                title.style.color = winner === 1 ? '#3b82f6' : '#ef4444';
+            }
+
+            scoreText.textContent = `得分: P1 ${player1Score} - P2 ${player2Score}`;
+            timeText.textContent = `⏱️ 总用时: ${formattedTime}`;
+            modal.style.display = 'flex';
+        }
+
+        function restartGame() {
+            // 停止计时器
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            document.getElementById('winnerModal').style.display = 'none';
+            setTimeout(() => {
+                initGame();
+            }, 300);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'success') {
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else {
+                oscillator.frequency.setValueAtTime(196, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(164.81, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+        }
+
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
