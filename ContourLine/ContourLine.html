@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>等高线理解：从立体到平面（含海拔标签）</title>
+    <title>等高线理解：从立体到平面（最终版）</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
@@ -140,13 +140,11 @@
         let activeFeature = null;
         let verticalScale = 1.5;
         let contourCount = 20;
-        let heightMap = []; // 用于标签查找，这里将存储模型的高度信息
         let sunLight, fillLight;
         let modelHeightMin = 0, modelHeightMax = 1;
 
-        // Draco 解码器路径
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.5/');
         const gltfLoader = new GLTFLoader();
         gltfLoader.setDRACOLoader(dracoLoader);
 
@@ -155,14 +153,19 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
             camera = new THREE.PerspectiveCamera(48, container.clientWidth/container.clientHeight, 0.1, 500);
-            camera.position.set(45, 32, 55);
+            camera.position.set(10, 10, 10);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderer.domElement);
+
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.1;
-            controls.minDistance = 5; controls.maxDistance = 200;
-            controls.target.set(0, 4, 0);
+            controls.enableDamping = true;
+            controls.maxPolarAngle = Math.PI/2.1;
+            controls.minDistance = 0.1;
+            controls.maxDistance = 500;
+            controls.target.set(0, 0, 0);
+            controls.update();
+
             scene.add(new THREE.AmbientLight(0x8899bb, 1.8));
             scene.add(new THREE.HemisphereLight(0xffeedd, 0x445566, 1.2));
             sunLight = new THREE.DirectionalLight(0xfff8ee, 4.5);
@@ -171,7 +174,7 @@
             fillLight = new THREE.DirectionalLight(0xaaccff, 1.5);
             fillLight.position.set(-3, 1, -3);
             scene.add(fillLight);
-            
+
             updatePlaneImage();
             loadModelAndSetup();
             addLegend(container);
@@ -186,165 +189,215 @@
         }
 
         function loadModelAndSetup() {
-            // 加载同目录下的 ContourLine.glb
-            gltfLoader.load('./ContourLine.glb', (gltf) => {
-                const model = gltf.scene;
-                const box = new THREE.Box3().setFromObject(model);
-                modelHeightMin = box.min.y;
-                modelHeightMax = box.max.y;
-                
-                // 居中模型
-                const center = box.getCenter(new THREE.Vector3());
-                model.position.set(-center.x, -center.y, -center.z);
-                // 应用垂直比例
-                model.scale.y = verticalScale;
-                
-                // 替换材质为自定义着色器
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        const contourSpacing = (modelHeightMax - modelHeightMin) / contourCount;
-                        child.material = new THREE.ShaderMaterial({
-                            uniforms: {
-                                uContourSpacing: { value: contourSpacing },
-                                uMinHeight: { value: modelHeightMin },
-                                uMaxHeight: { value: modelHeightMax },
-                                uVerticalScale: { value: verticalScale },
-                                uSunDirection: { value: sunLight.position.clone().normalize() },
-                                uFillDir: { value: fillLight.position.clone().normalize() }
-                            },
-                            vertexShader: `
-                                varying vec3 vWorldPos;
-                                varying vec3 vNormal;
-                                varying vec3 vViewPos;
-                                varying float vHeight;
-                                uniform float uMinHeight;
-                                uniform float uMaxHeight;
-                                uniform float uVerticalScale;
-                                void main() {
-                                    vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                                    vWorldPos = worldPos.xyz;
-                                    vHeight = worldPos.y; // 世界空间高度
-                                    vNormal = normalize(mat3(modelMatrix) * normal);
-                                    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-                                    vViewPos = -mv.xyz;
-                                    gl_Position = projectionMatrix * mv;
-                                }
-                            `,
-                            fragmentShader: `
-                                varying vec3 vWorldPos;
-                                varying vec3 vNormal;
-                                varying vec3 vViewPos;
-                                varying float vHeight;
-                                uniform float uContourSpacing;
-                                uniform float uMinHeight;
-                                uniform float uMaxHeight;
-                                uniform vec3 uSunDirection;
-                                uniform vec3 uFillDir;
-                                
-                                vec3 getColor(float h) {
-                                    h = clamp(h, 0.0, 1.0);
-                                    if (h < 0.18) return mix(vec3(0.22,0.52,0.18), vec3(0.35,0.62,0.22), h/0.18);
-                                    else if (h < 0.35) return mix(vec3(0.35,0.62,0.22), vec3(0.55,0.68,0.25), (h-0.18)/0.17);
-                                    else if (h < 0.5) return mix(vec3(0.55,0.68,0.25), vec3(0.72,0.65,0.28), (h-0.35)/0.15);
-                                    else if (h < 0.62) return mix(vec3(0.72,0.65,0.28), vec3(0.78,0.55,0.22), (h-0.5)/0.12);
-                                    else if (h < 0.74) return mix(vec3(0.78,0.55,0.22), vec3(0.68,0.4,0.18), (h-0.62)/0.12);
-                                    else if (h < 0.85) return mix(vec3(0.68,0.4,0.18), vec3(0.55,0.3,0.15), (h-0.74)/0.11);
-                                    else if (h < 0.94) return mix(vec3(0.55,0.3,0.15), vec3(0.72,0.65,0.55), (h-0.85)/0.09);
-                                    else return mix(vec3(0.72,0.65,0.55), vec3(0.9,0.88,0.84), (h-0.94)/0.06);
-                                }
-                                
-                                void main() {
-                                    float hNorm = (vHeight - uMinHeight) / (uMaxHeight - uMinHeight);
-                                    vec3 base = getColor(hNorm);
-                                    float line = 0.0;
-                                    float phase = mod(vHeight - uMinHeight + uContourSpacing*0.5, uContourSpacing);
-                                    float halfW = uContourSpacing * 0.04;
-                                    if (phase < halfW*2.0) line = 1.0 - smoothstep(0.0, halfW, abs(phase-halfW));
-                                    vec3 N = normalize(vNormal);
-                                    float diff = max(dot(N, uSunDirection), 0.0)*0.55 + max(dot(N, uFillDir), 0.0)*0.18;
-                                    float light = 0.55 + diff;
-                                    vec3 color = base * light * 1.05;
-                                    color = mix(color, color*0.28, line*0.55);
-                                    float fresnel = pow(1.0 - abs(dot(N, normalize(vViewPos))), 3.5);
-                                    color += fresnel * 0.06;
-                                    gl_FragColor = vec4(color, 1.0);
-                                }
-                            `,
-                            side: THREE.DoubleSide
-                        });
-                        child.material.uniforms.uVerticalScale.value = verticalScale;
+            const modelUrl = './ContourLine.glb';
+            console.log('开始加载模型:', modelUrl);
+            document.getElementById('mode-label').textContent = '加载模型中... 0%';
+
+            gltfLoader.load(
+                modelUrl,
+                (gltf) => {
+                    console.log('模型加载成功');
+                    const model = gltf.scene;
+                    const box = new THREE.Box3().setFromObject(model);
+                    modelHeightMin = box.min.y;
+                    modelHeightMax = box.max.y;
+                    window.modelHeightMin = modelHeightMin;
+                    window.modelHeightMax = modelHeightMax;
+
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    console.log('模型高度范围:', modelHeightMin, '~', modelHeightMax, '尺寸:', maxDim);
+
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.set(-center.x, -center.y, -center.z);
+                    model.scale.y = verticalScale;
+
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            const contourSpacing = (modelHeightMax - modelHeightMin) / contourCount;
+                            child.material = new THREE.ShaderMaterial({
+                                uniforms: {
+                                    uContourSpacing: { value: contourSpacing },
+                                    uMinHeight: { value: modelHeightMin },
+                                    uMaxHeight: { value: modelHeightMax },
+                                    uVerticalScale: { value: verticalScale },
+                                    uSunDirection: { value: sunLight.position.clone().normalize() },
+                                    uFillDir: { value: fillLight.position.clone().normalize() }
+                                },
+                                vertexShader: `
+                                    varying vec3 vWorldPos;
+                                    varying vec3 vNormal;
+                                    varying vec3 vViewPos;
+                                    varying float vHeight;
+                                    void main() {
+                                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                                        vWorldPos = worldPos.xyz;
+                                        vHeight = worldPos.y;
+                                        vNormal = normalize(mat3(modelMatrix) * normal);
+                                        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                                        vViewPos = -mv.xyz;
+                                        gl_Position = projectionMatrix * mv;
+                                    }
+                                `,
+                                fragmentShader: `
+                                    varying vec3 vWorldPos;
+                                    varying vec3 vNormal;
+                                    varying vec3 vViewPos;
+                                    varying float vHeight;
+                                    uniform float uContourSpacing;
+                                    uniform float uMinHeight;
+                                    uniform float uMaxHeight;
+                                    uniform vec3 uSunDirection;
+                                    uniform vec3 uFillDir;
+                                    
+                                    vec3 getColor(float h) {
+                                        h = clamp(h, 0.0, 1.0);
+                                        vec3 N = normalize(vNormal);
+                                        float flatness = dot(N, vec3(0.0, 1.0, 0.0));
+                                        float elevation = vHeight - uMinHeight;
+
+                                        if (vWorldPos.x < 0.0 && elevation > 0.05 && elevation < 0.065) {
+                                            return vec3(0.2, 0.5, 0.8);
+                                        }
+
+                                        if (h < 0.18) return mix(vec3(0.22,0.52,0.18), vec3(0.35,0.62,0.22), h/0.18);
+                                        else if (h < 0.35) return mix(vec3(0.35,0.62,0.22), vec3(0.55,0.68,0.25), (h-0.18)/0.17);
+                                        else if (h < 0.5) return mix(vec3(0.55,0.68,0.25), vec3(0.72,0.65,0.28), (h-0.35)/0.15);
+                                        else if (h < 0.62) return mix(vec3(0.72,0.65,0.28), vec3(0.78,0.55,0.22), (h-0.5)/0.12);
+                                        else if (h < 0.74) return mix(vec3(0.78,0.55,0.22), vec3(0.68,0.4,0.18), (h-0.62)/0.12);
+                                        else if (h < 0.85) return mix(vec3(0.68,0.4,0.18), vec3(0.55,0.3,0.15), (h-0.74)/0.11);
+                                        else if (h < 0.94) return mix(vec3(0.55,0.3,0.15), vec3(0.72,0.65,0.55), (h-0.85)/0.09);
+                                        else return mix(vec3(0.72,0.65,0.55), vec3(0.9,0.88,0.84), (h-0.94)/0.06);
+                                    }
+                                    
+                                    void main() {
+                                        float hNorm = (vHeight - uMinHeight) / (uMaxHeight - uMinHeight);
+                                        vec3 base = getColor(hNorm);
+                                        float line = 0.0;
+                                        float phase = mod(vHeight - uMinHeight + uContourSpacing*0.5, uContourSpacing);
+                                        float halfW = uContourSpacing * 0.06;
+                                        if (phase < halfW*2.0) line = 1.0 - smoothstep(0.0, halfW, abs(phase-halfW));
+                                        vec3 N = normalize(vNormal);
+                                        float diff = max(dot(N, uSunDirection), 0.0)*0.55 + max(dot(N, uFillDir), 0.0)*0.18;
+                                        float light = 0.55 + diff;
+                                        vec3 color = base * light * 1.05;
+                                        color = mix(color, vec3(0.1, 0.05, 0.05), line*0.8);
+                                        float fresnel = pow(1.0 - abs(dot(N, normalize(vViewPos))), 3.5);
+                                        color += fresnel * 0.06;
+                                        gl_FragColor = vec4(color, 1.0);
+                                    }
+                                `,
+                                side: THREE.DoubleSide
+                            });
+                        }
+                    });
+
+                    scene.add(model);
+                    modelGroup = model;
+
+                    const newTarget = new THREE.Vector3(0, size.y/2, 0);
+                    const newPos = new THREE.Vector3(maxDim * 1.5, maxDim * 0.8, maxDim * 1.5);
+                    camera.position.copy(newPos);
+                    controls.target.copy(newTarget);
+                    controls.minDistance = maxDim * 0.1;
+                    controls.maxDistance = maxDim * 5;
+                    controls.update();
+
+                    createContourLabelsFromModel();
+                    document.getElementById('mode-label').textContent = '立体地形视图';
+                },
+                (progress) => {
+                    if (progress.total > 0) {
+                        const percent = Math.round(progress.loaded / progress.total * 100);
+                        document.getElementById('mode-label').textContent = `加载模型中... ${percent}%`;
                     }
-                });
-                
-                scene.add(model);
-                modelGroup = model;
-                
-                // 更新相机适应模型大小
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
-                controls.target.set(0, size.y/2, 0);
-                controls.update();
-                
-                // 生成海拔标签
-                createContourLabelsFromModel();
-            }, undefined, (error) => {
-                console.error('模型加载失败:', error);
-            });
+                },
+                (error) => {
+                    console.error('模型加载失败:', error);
+                    document.getElementById('mode-label').textContent = '❌ 模型加载失败';
+                }
+            );
         }
 
         function createContourLabelsFromModel() {
             if (labelGroup) scene.remove(labelGroup);
             labelGroup = new THREE.Group();
             if (!modelGroup) return;
-            
+
             const spacing = (modelHeightMax - modelHeightMin) / contourCount;
-            // 采样模型顶点来放置标签
             const positions = [];
             modelGroup.traverse((child) => {
                 if (child.isMesh && child.geometry) {
                     const pos = child.geometry.attributes.position;
                     if (!pos) return;
                     const worldMatrix = child.matrixWorld;
-                    for (let i = 0; i < pos.count; i++) {
+                    const step = Math.max(1, Math.floor(pos.count / 4000));
+                    for (let i = 0; i < pos.count; i += step) {
                         const worldPos = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(worldMatrix);
                         positions.push(worldPos);
                     }
                 }
             });
-            
             if (positions.length === 0) return;
-            
+
+            const usedPositions = [];
+
             for (let level = spacing; level <= modelHeightMax - modelHeightMin; level += spacing) {
-                let bestPos = null;
-                let bestDist = Infinity;
-                // 寻找最接近该高度的顶点
-                for (let j = 0; j < positions.length; j += Math.max(1, Math.floor(positions.length / 1000))) {
-                    const p = positions[j];
-                    const diff = Math.abs(p.y - level);
-                    if (diff < bestDist) {
-                        bestDist = diff;
-                        bestPos = p.clone();
+                const layerPoints = positions.filter(p => {
+                    const rel = p.y - modelHeightMin;
+                    return Math.abs(rel - level) < spacing * 0.2;
+                });
+                if (layerPoints.length === 0) continue;
+
+                const targetCount = Math.min(3, layerPoints.length);
+                const selected = [];
+                const stepIdx = Math.max(1, Math.floor(layerPoints.length / targetCount));
+                for (let i = 0; i < layerPoints.length; i += stepIdx) {
+                    const pt = layerPoints[i];
+                    let tooClose = false;
+                    for (const used of usedPositions) {
+                        if (pt.distanceTo(used) < 0.1) {
+                            tooClose = true;
+                            break;
+                        }
                     }
+                    if (!tooClose) {
+                        selected.push(pt);
+                        usedPositions.push(pt);
+                    }
+                    if (selected.length >= targetCount) break;
                 }
-                if (bestPos) {
+
+                selected.forEach(pos => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 64; canvas.height = 32;
+                    canvas.width = 128;
+                    canvas.height = 64;
                     const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.beginPath();
+                    ctx.roundRect(4, 4, 80, 35, 8);
+                    ctx.fill();
+
                     ctx.fillStyle = 'white';
-                    ctx.font = 'bold 14px Arial';
+                    ctx.font = 'bold 24px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    // 显示实际海拔（可根据需要调整）
-                    ctx.fillText(Math.round(level) + 'm', 32, 16);
+                    ctx.fillText(Math.round(level * 1000) + 'm', 44, 21.5);
+
                     const texture = new THREE.CanvasTexture(canvas);
-                    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                    const spriteMat = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true,
+                        depthTest: true,
+                        depthWrite: false
+                    });
                     const sprite = new THREE.Sprite(spriteMat);
-                    sprite.position.copy(bestPos);
-                    sprite.position.y += 1; // 略微上浮
-                    sprite.scale.set(2, 1, 1);
+                    sprite.position.copy(pos);
+                    sprite.position.y += 0.05;
+                    sprite.scale.set(0.15, 0.075, 1);
                     labelGroup.add(sprite);
-                }
+                });
             }
             scene.add(labelGroup);
         }
@@ -401,11 +454,11 @@
             document.getElementById('btn-reset').onclick = () => {
                 if (modelGroup) {
                     const box = new THREE.Box3().setFromObject(modelGroup);
-                    const center = box.getCenter(new THREE.Vector3());
                     const size = box.getSize(new THREE.Vector3());
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    camera.position.set(center.x + maxDim*1.5, center.y + maxDim*1.2, center.z + maxDim*1.5);
-                    controls.target.copy(center);
+                    camera.position.set(maxDim * 1.5, maxDim * 0.8, maxDim * 1.5);
+                    controls.target.set(0, size.y/2, 0);
+                    controls.update();
                 }
             };
             document.querySelectorAll('.terrain-card').forEach(c => {
@@ -416,7 +469,7 @@
                 };
             });
             document.getElementById('popup-close').onclick = () => document.getElementById('popup').classList.remove('show');
-            
+
             document.getElementById('vscale').oninput = e => {
                 verticalScale = +e.target.value;
                 document.getElementById('vscale-val').textContent = verticalScale.toFixed(1) + 'x';
@@ -427,11 +480,10 @@
                             child.material.uniforms.uVerticalScale.value = verticalScale;
                         }
                     });
-                    // 重新生成标签
                     createContourLabelsFromModel();
                 }
             };
-            
+
             document.getElementById('ccount').oninput = e => {
                 contourCount = +e.target.value;
                 document.getElementById('ccount-val').textContent = contourCount + '条';
@@ -445,7 +497,7 @@
                     createContourLabelsFromModel();
                 }
             };
-            
+
             document.getElementById('image-select').onchange = e => {
                 currentImageIndex = parseInt(e.target.value);
                 updatePlaneImage();
