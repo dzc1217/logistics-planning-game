@@ -118,8 +118,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "/js/three.module.js",
-            "three/addons/": "/js/"
+            "three": "./js/three.module.js",
+            "three/addons/": "./js/"
         }
     }
 </script>
@@ -149,7 +149,7 @@
         let modelHeightMin = 0, modelHeightMax = 1;
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('/js/');
+        dracoLoader.setDecoderPath('./js/');
         const gltfLoader = new GLTFLoader();
         gltfLoader.setDRACOLoader(dracoLoader);
 
