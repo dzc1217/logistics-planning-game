@@ -13,15 +13,11 @@
         .header h1 { font-size: 1rem; font-weight: 700; }
         .header p { font-size: 0.65rem; opacity: 0.9; }
         .header-tip { font-size: 0.6rem; background: rgba(255,255,255,0.2); padding: 0.3rem 0.5rem; border-radius: 4px; }
-        .header-right { display: flex; align-items: center; gap: 1rem; }
-        .image-switcher { display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.3rem 0.6rem; }
-        .image-switcher label { font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
-        .image-switcher select { padding: 0.25rem 0.5rem; border-radius: 6px; border: none; font-size: 0.7rem; background: white; color: #1e293b; cursor: pointer; }
         .main { flex: 1; display: flex; overflow: hidden; }
         .view-area { flex: 1; position: relative; background: #ffffff; }
         .view-area canvas { display: block; }
         .view-area.mode-2d canvas { display: none; }
-        .contour-image { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 90%; max-height: 90%; }
+        .contour-image { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 95%; max-height: 95%;transition: all 0.2s;  } /* 图片放大 */
         .view-area.mode-2d .contour-image { display: block; }
         .mode-label { position: absolute; top: 0.5rem; left: 0.5rem; background: var(--primary); color: white; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; z-index: 10; }
         .legend { position: absolute; bottom: 0.5rem; right: 0.5rem; background: white; padding: 0.5rem; border-radius: 6px; font-size: 0.55rem; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -46,7 +42,7 @@
         .setting-value { font-size: 0.6rem; font-weight: 600; min-width: 35px; text-align: right; }
         input[type="range"] { width: 60px; height: 4px; -webkit-appearance: none; background: #e2e8f0; border-radius: 2px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; cursor: pointer; }
-        .footer { display: flex; justify-content: center; gap: 0.8rem; padding: 0.5rem; background: white; border-top: 1px solid var(--border); }
+        .footer { display: flex; justify-content: center; align-items: center; gap: 0.8rem; padding: 0.5rem; background: white; border-top: 1px solid var(--border); flex-wrap: wrap; }
         .btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.2rem; border: 2px solid var(--border); border-radius: 6px; background: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn:hover { border-color: var(--primary); }
         .btn.active { background: var(--primary); border-color: var(--primary); color: white; }
@@ -58,6 +54,12 @@
         .popup-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
         .popup-content { font-size: 0.7rem; line-height: 1.6; color: var(--text); }
         .popup-tip { margin-top: 0.5rem; padding: 0.4rem; background: #fef3c7; border-radius: 4px; font-size: 0.65rem; color: #92400e; }
+        .image-switcher { display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.3rem 0.6rem; }
+        .image-switcher label { font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
+        .image-switcher select { padding: 0.25rem 0.5rem; border-radius: 6px; border: none; font-size: 0.7rem; background: white; color: #1e293b; cursor: pointer; }
+        /* 底部模式切换工具栏中样式微调 */
+        .footer .image-switcher { background: #f1f5f9; }
+        .footer .image-switcher label { color: var(--text); }
     </style>
 </head>
 <body>
@@ -67,19 +69,7 @@
                 <h1>🏔️ 等高线理解：从立体到平面</h1>
                 <p>交互式地理学习工具</p>
             </div>
-            <div class="header-right">
-                <div class="header-tip">🖱️ 拖拽旋转 · 滚轮缩放 · 点击卡片学习</div>
-                <div class="image-switcher">
-                    <label for="image-select">🖼️ 对比图片</label>
-                    <select id="image-select">
-                        <option value="0">教学示范图</option>
-                        <option value="1">抱犊寨卫星图1</option>
-                        <option value="2">抱犊寨卫星图2</option>
-                        <option value="3">抱犊寨地形图3</option>
-                        <option value="4">抱犊寨地形图4</option>
-                    </select>
-                </div>
-            </div>
+            <div class="header-tip">🖱️ 拖拽旋转 · 滚轮缩放 · 点击卡片学习</div>
         </header>
         <main class="main">
             <div id="view" class="view-area">
@@ -112,6 +102,21 @@
             <button class="btn active" id="btn-3d">🎮 立体模式</button>
             <button class="btn" id="btn-2d">🗺️ 平面模式</button>
             <button class="btn" id="btn-reset">🔄 重置视角</button>
+            <div class="image-switcher">
+                <label for="image-select">🖼️ 对比图片</label>
+                <select id="image-select">
+                    <option value="0">教学示范图</option>
+                    <option value="1">抱犊寨卫星图1</option>
+                    <option value="2">抱犊寨卫星图2</option>
+                    <option value="3">抱犊寨地形图3</option>
+                    <option value="4">抱犊寨地形图4</option>
+                </select>
+            </div>
+            <div class="setting-row" style="margin-left: 1rem;">
+    		<span class="setting-label" style="color: var(--text);">图片缩放</span>
+    		<input type="range" id="img-zoom" min="50" max="200" value="95" step="5">
+    		<span class="setting-value" id="img-zoom-val">95%</span>
+			</div>
         </footer>
     </div>
 
@@ -119,8 +124,7 @@
     {
         "imports": {
             "three": "./js/three.module.js",
-            "three/addons/": "./js/",
-            "three/addons/utils/": "./js/utils/"
+            "three/addons/": "./js/"
         }
     }
 </script>
@@ -517,6 +521,16 @@
                     renderer.setSize(r.width, r.height);
                 }
             });
+
+            document.getElementById('img-zoom').oninput = e => {
+   				const zoom = +e.target.value;
+    			document.getElementById('img-zoom-val').textContent = zoom + '%';
+    			const img = document.getElementById('contour-img');
+    			if (img) {
+       			 	img.style.maxWidth = zoom + '%';
+        			img.style.maxHeight = zoom + '%';
+    			}
+			};
         }
 
         function animate() {
