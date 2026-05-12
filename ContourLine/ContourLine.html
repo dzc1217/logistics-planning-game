@@ -121,6 +121,8 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
         // 图片列表
         const imageList = [
@@ -133,46 +135,20 @@
         let currentImageIndex = 0;
 
         let scene, camera, renderer, controls;
-        let terrain, labelGroup;
+        let modelGroup, labelGroup;
         let mode = '3d';
         let activeFeature = null;
         let verticalScale = 1.5;
         let contourCount = 20;
-        const SIZE = 100;
-        const MAX_H = 1.5;
-        const GRID = 300;
-        const HEIGHT_DISPLAY_SCALE = 4;
-        let heightMap = [];
+        let heightMap = []; // 用于标签查找，这里将存储模型的高度信息
         let sunLight, fillLight;
+        let modelHeightMin = 0, modelHeightMax = 1;
 
-        // 地形函数（保持不变）
-        function terrainHeight(x, z) {
-            const nx = (x - 0.5) * 2.8;
-            const ny = (z - 0.5) * 2.8;
-            const d1 = Math.pow(nx-0.55,2) + Math.pow(ny-0.2,2);
-            const peak1 = 1.3 * Math.exp(-d1 / 0.18);
-            const d2 = Math.pow(nx+0.55,2) + Math.pow(ny-0.35,2);
-            const peak2 = 1.0 * Math.exp(-d2 / 0.22);
-            const d3 = Math.pow(nx,2) + Math.pow(ny+0.7,2);
-            const peak3 = 1.05 * Math.exp(-d3 / 0.16);
-            const ax = 0.55, ay = 0.2, bx = -0.55, by = 0.35;
-            const abx = bx-ax, aby = by-ay, ab2 = abx*abx+aby*aby;
-            const t = Math.max(0, Math.min(1, ((nx-ax)*abx + (ny-ay)*aby)/ab2));
-            const projx = ax + t*abx, projy = ay + t*aby;
-            const distToRidge = Math.sqrt(Math.pow(nx-projx,2) + Math.pow(ny-projy,2));
-            const ridgeHeight = 0.8 * Math.exp(-distToRidge*distToRidge/0.018) * (1 - Math.abs(t-0.5)*0.4);
-            const sx = nx + 0.2, sy = ny + 0.15;
-            const saddle = 0.35 * (sx*sx - sy*sy) * Math.exp(-(sx*sx+sy*sy)/0.45);
-            const cliff = 0.6 / (1 + Math.exp(-(nx-0.55)/0.04));
-            const micro = 0.015*Math.sin(nx*6.0)*Math.cos(ny*5.0) + 0.01*Math.sin(nx*9.0)*Math.sin(ny*7.0);
-            const valleyDist1 = Math.sqrt(Math.pow(nx-0.1, 2) + Math.pow(ny+0.5, 2));
-            const valley1 = -0.35 * Math.exp(-valleyDist1 * valleyDist1 / 0.02);
-            const valleyDist2 = Math.sqrt(Math.pow(nx+0.3, 2) + Math.pow(ny+0.3, 2));
-            const valley2 = -0.25 * Math.exp(-valleyDist2 * valleyDist2 / 0.03);
-            const valley = valley1 + valley2;
-            let h = peak1 + peak2 + peak3 + ridgeHeight + saddle + cliff + micro + valley;
-            return Math.max(0, Math.min(MAX_H, h));
-        }
+        // Draco 解码器路径
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.setDRACOLoader(dracoLoader);
 
         function init() {
             const container = document.getElementById('view');
@@ -185,7 +161,7 @@
             container.appendChild(renderer.domElement);
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.1;
-            controls.minDistance = 25; controls.maxDistance = 120;
+            controls.minDistance = 5; controls.maxDistance = 200;
             controls.target.set(0, 4, 0);
             scene.add(new THREE.AmbientLight(0x8899bb, 1.8));
             scene.add(new THREE.HemisphereLight(0xffeedd, 0x445566, 1.2));
@@ -195,12 +171,9 @@
             fillLight = new THREE.DirectionalLight(0xaaccff, 1.5);
             fillLight.position.set(-3, 1, -3);
             scene.add(fillLight);
-            const gridHelper = new THREE.GridHelper(SIZE, 20, 0xcccccc, 0xdddddd);
-            gridHelper.position.y = -2.0;
-            scene.add(gridHelper);
+            
             updatePlaneImage();
-            createTerrain();
-            createContourLabels();
+            loadModelAndSetup();
             addLegend(container);
         }
 
@@ -212,140 +185,166 @@
             }
         }
 
-        function createTerrain() {
-            if (terrain) scene.remove(terrain);
-            const geo = new THREE.PlaneGeometry(SIZE, SIZE, GRID, GRID);
-            geo.rotateX(-Math.PI / 2);
-            const posArr = geo.attributes.position.array;
-            heightMap = new Array(GRID+1);
-            for (let i = 0; i <= GRID; i++) heightMap[i] = new Array(GRID+1);
-            for (let i = 0; i < posArr.length; i += 3) {
-                const x = posArr[i];
-                const z = posArr[i+2];
-                const u = (x / SIZE) + 0.5;
-                const v = (-z / SIZE) + 0.5;
-                const h = terrainHeight(u, v);
-                posArr[i+1] = h * HEIGHT_DISPLAY_SCALE * verticalScale;
-                const ix = Math.round(u * GRID);
-                const iz = Math.round(v * GRID);
-                if (ix >=0 && ix <= GRID && iz >=0 && iz <= GRID) {
-                    heightMap[iz][ix] = h;
-                }
-            }
-            for (let i=0; i<=GRID; i++) {
-                for (let j=0; j<=GRID; j++) {
-                    if (heightMap[i][j] === undefined) heightMap[i][j] = terrainHeight(j/GRID, i/GRID);
-                }
-            }
-            geo.attributes.position.needsUpdate = true;
-            geo.computeVertexNormals();
-
-            const contourSpacing = MAX_H / contourCount;
-            const terrainMat = new THREE.ShaderMaterial({
-                uniforms: {
-                    uContourSpacing: { value: contourSpacing },
-                    uMaxHeight: { value: MAX_H },
-                    uVerticalScale: { value: verticalScale },
-                    uHeightScale: { value: HEIGHT_DISPLAY_SCALE },
-                    uSunDirection: { value: new THREE.Vector3() },
-                    uAmbient: { value: new THREE.Color(0x8899bb) },
-                    uSunColor: { value: new THREE.Color(0xfff8ee) },
-                    uFillDir: { value: new THREE.Vector3() },
-                    uFillColor: { value: new THREE.Color(0xaaccff) }
-                },
-                vertexShader: `
-                    varying vec3 vWorldPos, vNormal, vViewPos;
-                    varying float vHeight;
-                    uniform float uVerticalScale;
-                    uniform float uHeightScale;
-                    uniform float uMaxHeight;
-                    void main() {
-                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                        vWorldPos = worldPos.xyz;
-                        vHeight = worldPos.y / (uHeightScale * uVerticalScale);
-                        vNormal = normalize(mat3(modelMatrix) * normal);
-                        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-                        vViewPos = -mv.xyz;
-                        gl_Position = projectionMatrix * mv;
+        function loadModelAndSetup() {
+            // 加载同目录下的 ContourLine.glb
+            gltfLoader.load('./ContourLine.glb', (gltf) => {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                modelHeightMin = box.min.y;
+                modelHeightMax = box.max.y;
+                
+                // 居中模型
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.set(-center.x, -center.y, -center.z);
+                // 应用垂直比例
+                model.scale.y = verticalScale;
+                
+                // 替换材质为自定义着色器
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        const contourSpacing = (modelHeightMax - modelHeightMin) / contourCount;
+                        child.material = new THREE.ShaderMaterial({
+                            uniforms: {
+                                uContourSpacing: { value: contourSpacing },
+                                uMinHeight: { value: modelHeightMin },
+                                uMaxHeight: { value: modelHeightMax },
+                                uVerticalScale: { value: verticalScale },
+                                uSunDirection: { value: sunLight.position.clone().normalize() },
+                                uFillDir: { value: fillLight.position.clone().normalize() }
+                            },
+                            vertexShader: `
+                                varying vec3 vWorldPos;
+                                varying vec3 vNormal;
+                                varying vec3 vViewPos;
+                                varying float vHeight;
+                                uniform float uMinHeight;
+                                uniform float uMaxHeight;
+                                uniform float uVerticalScale;
+                                void main() {
+                                    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                                    vWorldPos = worldPos.xyz;
+                                    vHeight = worldPos.y; // 世界空间高度
+                                    vNormal = normalize(mat3(modelMatrix) * normal);
+                                    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                                    vViewPos = -mv.xyz;
+                                    gl_Position = projectionMatrix * mv;
+                                }
+                            `,
+                            fragmentShader: `
+                                varying vec3 vWorldPos;
+                                varying vec3 vNormal;
+                                varying vec3 vViewPos;
+                                varying float vHeight;
+                                uniform float uContourSpacing;
+                                uniform float uMinHeight;
+                                uniform float uMaxHeight;
+                                uniform vec3 uSunDirection;
+                                uniform vec3 uFillDir;
+                                
+                                vec3 getColor(float h) {
+                                    h = clamp(h, 0.0, 1.0);
+                                    if (h < 0.18) return mix(vec3(0.22,0.52,0.18), vec3(0.35,0.62,0.22), h/0.18);
+                                    else if (h < 0.35) return mix(vec3(0.35,0.62,0.22), vec3(0.55,0.68,0.25), (h-0.18)/0.17);
+                                    else if (h < 0.5) return mix(vec3(0.55,0.68,0.25), vec3(0.72,0.65,0.28), (h-0.35)/0.15);
+                                    else if (h < 0.62) return mix(vec3(0.72,0.65,0.28), vec3(0.78,0.55,0.22), (h-0.5)/0.12);
+                                    else if (h < 0.74) return mix(vec3(0.78,0.55,0.22), vec3(0.68,0.4,0.18), (h-0.62)/0.12);
+                                    else if (h < 0.85) return mix(vec3(0.68,0.4,0.18), vec3(0.55,0.3,0.15), (h-0.74)/0.11);
+                                    else if (h < 0.94) return mix(vec3(0.55,0.3,0.15), vec3(0.72,0.65,0.55), (h-0.85)/0.09);
+                                    else return mix(vec3(0.72,0.65,0.55), vec3(0.9,0.88,0.84), (h-0.94)/0.06);
+                                }
+                                
+                                void main() {
+                                    float hNorm = (vHeight - uMinHeight) / (uMaxHeight - uMinHeight);
+                                    vec3 base = getColor(hNorm);
+                                    float line = 0.0;
+                                    float phase = mod(vHeight - uMinHeight + uContourSpacing*0.5, uContourSpacing);
+                                    float halfW = uContourSpacing * 0.04;
+                                    if (phase < halfW*2.0) line = 1.0 - smoothstep(0.0, halfW, abs(phase-halfW));
+                                    vec3 N = normalize(vNormal);
+                                    float diff = max(dot(N, uSunDirection), 0.0)*0.55 + max(dot(N, uFillDir), 0.0)*0.18;
+                                    float light = 0.55 + diff;
+                                    vec3 color = base * light * 1.05;
+                                    color = mix(color, color*0.28, line*0.55);
+                                    float fresnel = pow(1.0 - abs(dot(N, normalize(vViewPos))), 3.5);
+                                    color += fresnel * 0.06;
+                                    gl_FragColor = vec4(color, 1.0);
+                                }
+                            `,
+                            side: THREE.DoubleSide
+                        });
+                        child.material.uniforms.uVerticalScale.value = verticalScale;
                     }
-                `,
-                fragmentShader: `
-                    varying vec3 vWorldPos, vNormal, vViewPos;
-                    varying float vHeight;
-                    uniform float uContourSpacing;
-                    uniform float uMaxHeight;
-                    uniform vec3 uSunDirection, uAmbient, uSunColor, uFillDir, uFillColor;
-                    vec3 getColor(float h) {
-                        h = clamp(h, 0.0, 1.0);
-                        if (h < 0.18) return mix(vec3(0.22,0.52,0.18), vec3(0.35,0.62,0.22), h/0.18);
-                        else if (h < 0.35) return mix(vec3(0.35,0.62,0.22), vec3(0.55,0.68,0.25), (h-0.18)/0.17);
-                        else if (h < 0.5) return mix(vec3(0.55,0.68,0.25), vec3(0.72,0.65,0.28), (h-0.35)/0.15);
-                        else if (h < 0.62) return mix(vec3(0.72,0.65,0.28), vec3(0.78,0.55,0.22), (h-0.5)/0.12);
-                        else if (h < 0.74) return mix(vec3(0.78,0.55,0.22), vec3(0.68,0.4,0.18), (h-0.62)/0.12);
-                        else if (h < 0.85) return mix(vec3(0.68,0.4,0.18), vec3(0.55,0.3,0.15), (h-0.74)/0.11);
-                        else if (h < 0.94) return mix(vec3(0.55,0.3,0.15), vec3(0.72,0.65,0.55), (h-0.85)/0.09);
-                        else return mix(vec3(0.72,0.65,0.55), vec3(0.9,0.88,0.84), (h-0.94)/0.06);
-                    }
-                    void main() {
-                        float hNorm = vHeight / uMaxHeight;
-                        vec3 base = getColor(hNorm);
-                        float line = 0.0;
-                        float phase = mod(vHeight + uContourSpacing*0.5, uContourSpacing);
-                        float halfW = uContourSpacing * 0.06;
-                        if (phase < halfW*2.0) line = 1.0 - smoothstep(0.0, halfW, abs(phase-halfW));
-                        vec3 N = normalize(vNormal);
-                        float diff = max(dot(N, uSunDirection), 0.0)*0.55 + max(dot(N, uFillDir), 0.0)*0.18;
-                        float light = 0.55 + diff;
-                        vec3 color = base * light * 1.05;
-                        color = mix(color, color*0.28, line*0.55);
-                        float fresnel = pow(1.0 - abs(dot(N, normalize(vViewPos))), 3.5);
-                        color += fresnel * 0.06;
-                        gl_FragColor = vec4(color, 1.0);
-                    }
-                `,
-                side: THREE.DoubleSide
+                });
+                
+                scene.add(model);
+                modelGroup = model;
+                
+                // 更新相机适应模型大小
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
+                controls.target.set(0, size.y/2, 0);
+                controls.update();
+                
+                // 生成海拔标签
+                createContourLabelsFromModel();
+            }, undefined, (error) => {
+                console.error('模型加载失败:', error);
             });
-            terrainMat.uniforms.uSunDirection.value = sunLight.position.clone().normalize();
-            terrainMat.uniforms.uFillDir.value = fillLight.position.clone().normalize();
-            terrain = new THREE.Mesh(geo, terrainMat);
-            scene.add(terrain);
         }
 
-        function createContourLabels() {
+        function createContourLabelsFromModel() {
             if (labelGroup) scene.remove(labelGroup);
             labelGroup = new THREE.Group();
-            const spacing = MAX_H / contourCount;
-            for (let level = spacing; level <= MAX_H; level += spacing) {
-                let bestX = 0, bestZ = 0, bestDist = Infinity;
-                const step = 4;
-                for (let i = 0; i <= GRID; i += step) {
-                    for (let j = 0; j <= GRID; j += step) {
-                        const h = heightMap[i][j];
-                        const diff = Math.abs(h - level);
-                        if (diff < bestDist) {
-                            bestDist = diff;
-                            bestX = j / GRID;
-                            bestZ = i / GRID;
-                        }
+            if (!modelGroup) return;
+            
+            const spacing = (modelHeightMax - modelHeightMin) / contourCount;
+            // 采样模型顶点来放置标签
+            const positions = [];
+            modelGroup.traverse((child) => {
+                if (child.isMesh && child.geometry) {
+                    const pos = child.geometry.attributes.position;
+                    if (!pos) return;
+                    const worldMatrix = child.matrixWorld;
+                    for (let i = 0; i < pos.count; i++) {
+                        const worldPos = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(worldMatrix);
+                        positions.push(worldPos);
                     }
                 }
-                const worldX = (bestX - 0.5) * SIZE;
-                const worldZ = (0.5 - bestZ) * SIZE;
-                const displayH = level * HEIGHT_DISPLAY_SCALE * verticalScale;
-                const canvas = document.createElement('canvas');
-                canvas.width = 64; canvas.height = 32;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 14px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round(level * 100) + 'm', 32, 16);
-                const texture = new THREE.CanvasTexture(canvas);
-                const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-                const sprite = new THREE.Sprite(spriteMat);
-                sprite.position.set(worldX, displayH + 2, worldZ);
-                sprite.scale.set(8, 4, 1);
-                labelGroup.add(sprite);
+            });
+            
+            if (positions.length === 0) return;
+            
+            for (let level = spacing; level <= modelHeightMax - modelHeightMin; level += spacing) {
+                let bestPos = null;
+                let bestDist = Infinity;
+                // 寻找最接近该高度的顶点
+                for (let j = 0; j < positions.length; j += Math.max(1, Math.floor(positions.length / 1000))) {
+                    const p = positions[j];
+                    const diff = Math.abs(p.y - level);
+                    if (diff < bestDist) {
+                        bestDist = diff;
+                        bestPos = p.clone();
+                    }
+                }
+                if (bestPos) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 64; canvas.height = 32;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    // 显示实际海拔（可根据需要调整）
+                    ctx.fillText(Math.round(level) + 'm', 32, 16);
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                    const sprite = new THREE.Sprite(spriteMat);
+                    sprite.position.copy(bestPos);
+                    sprite.position.y += 1; // 略微上浮
+                    sprite.scale.set(2, 1, 1);
+                    labelGroup.add(sprite);
+                }
             }
             scene.add(labelGroup);
         }
@@ -400,8 +399,14 @@
             document.getElementById('btn-3d').onclick = () => doSwitchMode('3d');
             document.getElementById('btn-2d').onclick = () => doSwitchMode('2d');
             document.getElementById('btn-reset').onclick = () => {
-                camera.position.set(45, 32, 55);
-                controls.target.set(0, 4, 0);
+                if (modelGroup) {
+                    const box = new THREE.Box3().setFromObject(modelGroup);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    camera.position.set(center.x + maxDim*1.5, center.y + maxDim*1.2, center.z + maxDim*1.5);
+                    controls.target.copy(center);
+                }
             };
             document.querySelectorAll('.terrain-card').forEach(c => {
                 c.onclick = () => {
@@ -415,17 +420,32 @@
             document.getElementById('vscale').oninput = e => {
                 verticalScale = +e.target.value;
                 document.getElementById('vscale-val').textContent = verticalScale.toFixed(1) + 'x';
-                scene.remove(terrain); scene.remove(labelGroup);
-                createTerrain(); createContourLabels();
+                if (modelGroup) {
+                    modelGroup.scale.y = verticalScale;
+                    modelGroup.traverse((child) => {
+                        if (child.isMesh && child.material.uniforms) {
+                            child.material.uniforms.uVerticalScale.value = verticalScale;
+                        }
+                    });
+                    // 重新生成标签
+                    createContourLabelsFromModel();
+                }
             };
+            
             document.getElementById('ccount').oninput = e => {
                 contourCount = +e.target.value;
                 document.getElementById('ccount-val').textContent = contourCount + '条';
-                terrain.material.uniforms.uContourSpacing.value = MAX_H / contourCount;
-                scene.remove(labelGroup);
-                createContourLabels();
+                if (modelGroup) {
+                    const spacing = (modelHeightMax - modelHeightMin) / contourCount;
+                    modelGroup.traverse((child) => {
+                        if (child.isMesh && child.material.uniforms) {
+                            child.material.uniforms.uContourSpacing.value = spacing;
+                        }
+                    });
+                    createContourLabelsFromModel();
+                }
             };
-            // 图片切换（顶部下拉框）
+            
             document.getElementById('image-select').onchange = e => {
                 currentImageIndex = parseInt(e.target.value);
                 updatePlaneImage();
