@@ -384,12 +384,11 @@
                     // 移除加载提示
                     removeMessage(loadingId);
 
-                    if (data.choices && data.choices.length > 0) {
-                        const reply = data.choices[0].message.content;
-                        addMessage('assistant', reply);
-                    } else {
-                        addMessage('assistant', '抱歉，我暂时无法回答这个问题，请稍后再试。');
-                    }
+                    if (data.reply) {
+   						 addMessage('assistant', data.reply);
+					} else {
+    				addMessage('assistant', '抱歉，我暂时无法回答这个问题，请稍后再试。');
+					}
                 } catch (error) {
                     removeMessage(loadingId);
                     addMessage('assistant', '网络请求失败，请检查API Key和网络连接。');
