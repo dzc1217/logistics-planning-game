@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>等高线理解：从立体到平面（最终版）</title>
+    <title>等高线3D教学智能体 · 交互式学习</title>
     <style>
+        /* ========== 原有样式 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
         html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); }
@@ -13,11 +14,15 @@
         .header h1 { font-size: 1rem; font-weight: 700; }
         .header p { font-size: 0.65rem; opacity: 0.9; }
         .header-tip { font-size: 0.6rem; background: rgba(255,255,255,0.2); padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .image-switcher { display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.3rem 0.6rem; }
+        .image-switcher label { font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
+        .image-switcher select { padding: 0.25rem 0.5rem; border-radius: 6px; border: none; font-size: 0.7rem; background: white; color: #1e293b; cursor: pointer; }
         .main { flex: 1; display: flex; overflow: hidden; }
         .view-area { flex: 1; position: relative; background: #ffffff; }
         .view-area canvas { display: block; }
         .view-area.mode-2d canvas { display: none; }
-        .contour-image { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 95%; max-height: 95%;transition: all 0.2s;  } /* 图片放大 */
+        .contour-image { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 95%; max-height: 95%; }
         .view-area.mode-2d .contour-image { display: block; }
         .mode-label { position: absolute; top: 0.5rem; left: 0.5rem; background: var(--primary); color: white; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; z-index: 10; }
         .legend { position: absolute; bottom: 0.5rem; right: 0.5rem; background: white; padding: 0.5rem; border-radius: 6px; font-size: 0.55rem; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -54,27 +59,159 @@
         .popup-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
         .popup-content { font-size: 0.7rem; line-height: 1.6; color: var(--text); }
         .popup-tip { margin-top: 0.5rem; padding: 0.4rem; background: #fef3c7; border-radius: 4px; font-size: 0.65rem; color: #92400e; }
-        .image-switcher { display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.3rem 0.6rem; }
-        .image-switcher label { font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
-        .image-switcher select { padding: 0.25rem 0.5rem; border-radius: 6px; border: none; font-size: 0.7rem; background: white; color: #1e293b; cursor: pointer; }
-        /* 底部模式切换工具栏中样式微调 */
-        .footer .image-switcher { background: #f1f5f9; }
-        .footer .image-switcher label { color: var(--text); }
+
+        /* ========== AI助教聊天窗口样式 ========== */
+        #ai-chat-toggle {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 200;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        #ai-chat-toggle:hover { transform: scale(1.1); }
+        #ai-chat-window {
+            position: absolute;
+            bottom: 90px;
+            left: 20px;
+            width: 320px;
+            max-height: 450px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 200;
+            overflow: hidden;
+        }
+        #ai-chat-window.open { display: flex; }
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.8rem;
+            min-height: 200px;
+            max-height: 300px;
+        }
+        .message {
+            margin-bottom: 0.8rem;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s;
+        }
+        .message.user { text-align: right; color: var(--text); }
+        .message.user span {
+            background: #e8f0fe;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            display: inline-block;
+            max-width: 85%;
+        }
+        .message.assistant { text-align: left; color: var(--text); }
+        .message.assistant span {
+            background: #f1f5f9;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            display: inline-block;
+            max-width: 85%;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-input-area {
+            display: flex;
+            padding: 0.5rem;
+            border-top: 1px solid var(--border);
+            gap: 0.3rem;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.7rem;
+            outline: none;
+        }
+        .chat-input-area button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .chat-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
     <div id="app">
         <header class="header">
             <div>
-                <h1>🏔️ 等高线理解：从立体到平面</h1>
-                <p>交互式地理学习工具</p>
+                <h1>🏔️ 等高线3D教学智能体</h1>
+                <p>AI助教 · 交互式学习</p>
             </div>
-            <div class="header-tip">🖱️ 拖拽旋转 · 滚轮缩放 · 点击卡片学习</div>
+            <div class="header-right">
+                <div class="header-tip">🖱️ 拖拽旋转 · 滚轮缩放 · 点击AI按钮提问</div>
+                <div class="image-switcher">
+                    <label for="image-select">🖼️ 对比图片</label>
+                    <select id="image-select">
+                        <option value="0">教学示范图</option>
+                        <option value="1">抱犊寨卫星图1</option>
+                        <option value="2">抱犊寨卫星图2</option>
+                        <option value="3">抱犊寨地形图3</option>
+                        <option value="4">抱犊寨地形图4</option>
+                    </select>
+                </div>
+            </div>
         </header>
         <main class="main">
             <div id="view" class="view-area">
                 <div class="mode-label" id="mode-label">立体地形视图</div>
                 <img id="contour-img" class="contour-image" src="" alt="等高线地形图">
+
+                <!-- AI助教按钮和窗口 -->
+                <button id="ai-chat-toggle" title="AI助教">💬</button>
+                <div id="ai-chat-window">
+                    <div class="chat-header">
+                        <span>🤖 AI地理助教</span>
+                        <button id="chat-close">×</button>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message assistant"><span>你好！我是等高线学习助手。你可以问我关于山峰、山谷、山脊、鞍部、陡崖等问题，也可以指着模型上的位置问我～</span></div>
+                    </div>
+                    <div class="chat-input-area">
+    					<input type="text" id="chat-input" placeholder="输入问题或点麦克风说话..." />
+    					<button id="chat-send">发送</button>
+    					<button id="chat-voice" title="语音输入">🎤</button>
+					</div>
+                </div>
             </div>
             <aside class="sidebar">
                 <div class="panel-title">地形特征识别</div>
@@ -102,9 +239,9 @@
             <button class="btn active" id="btn-3d">🎮 立体模式</button>
             <button class="btn" id="btn-2d">🗺️ 平面模式</button>
             <button class="btn" id="btn-reset">🔄 重置视角</button>
-            <div class="image-switcher">
-                <label for="image-select">🖼️ 对比图片</label>
-                <select id="image-select">
+            <div class="image-switcher" style="background:#f1f5f9;">
+                <label for="image-select-bottom" style="color:var(--text);">🖼️ 对比图片</label>
+                <select id="image-select-bottom">
                     <option value="0">教学示范图</option>
                     <option value="1">抱犊寨卫星图1</option>
                     <option value="2">抱犊寨卫星图2</option>
@@ -112,27 +249,32 @@
                     <option value="4">抱犊寨地形图4</option>
                 </select>
             </div>
-            <div class="setting-row" style="margin-left: 1rem;">
-    		<span class="setting-label" style="color: var(--text);">图片缩放</span>
-    		<input type="range" id="img-zoom" min="50" max="200" value="95" step="5">
-    		<span class="setting-value" id="img-zoom-val">95%</span>
-			</div>
         </footer>
     </div>
-
+   
     <script type="importmap">
-    {
-        "imports": {
-            "three": "./js/three.module.js",
-            "three/addons/": "./js/"
-        }
-    }
+        { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+    </script>
 </script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/DRACOLoader.js';
+        //本地版地址
+        //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        //import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        //import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        // =================================================
+
+        // 系统提示词（定义AI助教的角色和行为）
+        const SYSTEM_PROMPT = `你是一名专业的高中地理等高线教学助手，名字叫“小峰老师”。你的任务是：
+1. 用通俗易懂的语言帮助学生理解等高线地形图的各种概念（山峰、山谷、山脊、鞍部、陡崖、缓坡等）。
+2. 结合学生看到的三维地形模型进行解释，例如等高线密集表示陡坡，稀疏表示缓坡。
+3. 回答要简洁明了，每次回答控制在200字以内，适合中学生理解。
+4. 鼓励学生多观察模型，引导他们发现地形的规律。
+5. 当学生指出模型上的某个位置时，你可以根据位置特征给出具体的解释。
+请始终以热情、耐心的语气回答。`;
 
         // 图片列表
         const imageList = [
@@ -154,7 +296,9 @@
         let modelHeightMin = 0, modelHeightMax = 1;
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('./js/');
+       dracoLoader.setDecoderPath('./js/');   //上线版代码
+       //dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.5/');
+
         const gltfLoader = new GLTFLoader();
         gltfLoader.setDRACOLoader(dracoLoader);
 
@@ -188,6 +332,121 @@
             updatePlaneImage();
             loadModelAndSetup();
             addLegend(container);
+            initAIChat();
+        }
+
+        // ==================== AI对话逻辑 ====================
+        function initAIChat() {
+            const toggleBtn = document.getElementById('ai-chat-toggle');
+            const chatWindow = document.getElementById('ai-chat-window');
+            const closeBtn = document.getElementById('chat-close');
+            const sendBtn = document.getElementById('chat-send');
+            const input = document.getElementById('chat-input');
+            const messages = document.getElementById('chat-messages');
+
+            toggleBtn.addEventListener('click', () => {
+                chatWindow.classList.toggle('open');
+            });
+
+            closeBtn.addEventListener('click', () => {
+                chatWindow.classList.remove('open');
+            });
+
+            async function sendMessage() {
+                const userMessage = input.value.trim();
+                if (!userMessage) return;
+
+                // 显示用户消息
+                addMessage('user', userMessage);
+                input.value = '';
+                sendBtn.disabled = true;
+
+                // 显示加载提示
+                const loadingId = addMessage('assistant', '思考中...');
+
+                try {
+                    const response = await fetch('/api/chat', {
+    					method: 'POST',
+    					headers: { 'Content-Type': 'application/json' },
+    					body: JSON.stringify({ message: userMessage })
+					});
+
+                    const data = await response.json();
+                    // 移除加载提示
+                    removeMessage(loadingId);
+
+                    if (data.choices && data.choices.length > 0) {
+                        const reply = data.choices[0].message.content;
+                        addMessage('assistant', reply);
+                    } else {
+                        addMessage('assistant', '抱歉，我暂时无法回答这个问题，请稍后再试。');
+                    }
+                } catch (error) {
+                    removeMessage(loadingId);
+                    addMessage('assistant', '网络请求失败，请检查API Key和网络连接。');
+                } finally {
+                    sendBtn.disabled = false;
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            function addMessage(role, content) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${role}`;
+                msgDiv.innerHTML = `<span>${content}</span>`;
+                messages.appendChild(msgDiv);
+                messages.scrollTop = messages.scrollHeight;
+                return msgDiv;
+            }
+
+            function removeMessage(element) {
+                element.remove();
+            }
+
+            // 初始化语音识别
+const voiceBtn = document.getElementById('chat-voice');
+const inputField = document.getElementById('chat-input');
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'zh-CN';       // 中文识别
+    recognition.interimResults = false; // 只取最终结果
+    recognition.continuous = false;    // 说完一句就停止
+
+    voiceBtn.addEventListener('click', () => {
+        voiceBtn.textContent = '🔴'; // 正在录音
+        recognition.start();
+    });
+
+    recognition.addEventListener('result', (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputField.value = transcript;
+        voiceBtn.textContent = '🎤'; // 恢复麦克风图标
+        // 自动发送（可选）
+        // document.getElementById('chat-send').click();
+    });
+
+    recognition.addEventListener('error', (event) => {
+        voiceBtn.textContent = '🎤';
+        alert('语音识别失败：' + event.error);
+    });
+
+    recognition.addEventListener('end', () => {
+        voiceBtn.textContent = '🎤';
+    });
+} else {
+    voiceBtn.style.display = 'none'; // 浏览器不支持，隐藏按钮
+}
+
+
+
+
+
         }
 
         function updatePlaneImage() {
@@ -199,7 +458,8 @@
         }
 
         function loadModelAndSetup() {
-            const modelUrl = './ContourLine.glb';
+        	const modelUrl = './ContourLine.glb';
+            //const modelUrl = 'https://zzqrzm.top/ContourLine/ContourLine.glb';//本地版本
             console.log('开始加载模型:', modelUrl);
             document.getElementById('mode-label').textContent = '加载模型中... 0%';
 
@@ -263,7 +523,6 @@
                                     vec3 getColor(float h) {
                                         h = clamp(h, 0.0, 1.0);
                                         vec3 N = normalize(vNormal);
-                                        float flatness = dot(N, vec3(0.0, 1.0, 0.0));
                                         float elevation = vHeight - uMinHeight;
 
                                         if (vWorldPos.x < 0.0 && elevation > 0.05 && elevation < 0.065) {
@@ -512,6 +771,11 @@
                 currentImageIndex = parseInt(e.target.value);
                 updatePlaneImage();
             };
+            document.getElementById('image-select-bottom').onchange = e => {
+                currentImageIndex = parseInt(e.target.value);
+                updatePlaneImage();
+                document.getElementById('image-select').value = e.target.value;
+            };
             window.addEventListener('resize', () => {
                 const c = document.getElementById('view');
                 const r = c.getBoundingClientRect();
@@ -521,16 +785,6 @@
                     renderer.setSize(r.width, r.height);
                 }
             });
-
-            document.getElementById('img-zoom').oninput = e => {
-   				const zoom = +e.target.value;
-    			document.getElementById('img-zoom-val').textContent = zoom + '%';
-    			const img = document.getElementById('contour-img');
-    			if (img) {
-       			 	img.style.maxWidth = zoom + '%';
-        			img.style.maxHeight = zoom + '%';
-    			}
-			};
         }
 
         function animate() {
