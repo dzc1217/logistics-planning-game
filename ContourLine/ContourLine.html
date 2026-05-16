@@ -251,16 +251,25 @@
             </div>
         </footer>
     </div>
-   
+    <!-- 本地版js网址 -->
+    <!-- 本地版js网址 
     <script type="importmap">
         { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
     </script>
-</script>
+    -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/three.module.js",
+                "three/addons/": "./js/"
+            }
+        }
+    </script>
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'three/OrbitControls.js';
-        import { GLTFLoader } from 'three/GLTFLoader.js';
-        import { DRACOLoader } from 'three/DRACOLoader.js';
+        import { OrbitControls } from 'three/addons/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/DRACOLoader.js';
         //本地版地址
         //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         //import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
