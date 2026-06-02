@@ -414,7 +414,7 @@ class LogisticsGame {
                     urgency: '普通',
                     requirements: ['大宗',,'烟大轮渡', '低价', '重货'],
                     preferredTransport: '海路',
-                    customerNote: '短途运输，需要及时供应',
+                    customerNote: '大连到烟台直线距离约160公里，但绕行陆路约1400公里',
                     correctTransport: 'waterway',
                     reasoning: '大连到烟台直线距离约160公里，但绕行陆路约1400公里，大宗货物，应采用渤海湾烟大轮渡航线'
                 },
