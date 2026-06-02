@@ -362,6 +362,19 @@ class LogisticsGame {
                     customerNote: '需要长期稳定供应，成本要求合理',
                     correctTransport: 'pipeline',
                     reasoning: '天然气最适合管道运输，可连续稳定供应'
+                },
+                {
+                    name: '俄罗斯液化天然气',
+                    weight: 80000,
+                    volume: 100000,
+                    origin: '俄罗斯北极港口',
+                    destination: '中国接收站',
+                    urgency: '普通',
+                    requirements: ['超低温', '液体', '国际长距离', '大宗'],
+                    preferredTransport: '水路',
+                    customerNote: 'LNG需要超低温冷却压缩存储，需要专业LNG运输船',
+                    correctTransport: 'waterway',
+                    reasoning: '俄罗斯到中国是国际长距离运输，LNG需要专用运输船配备低温储存罐，海运最经济'
                 }
             ];
         } else if (this.level === 2) {
@@ -430,6 +443,19 @@ class LogisticsGame {
                     customerNote: '长距离大宗粮食运输，成本要求低',
                     correctTransport: 'railway',
                     reasoning: '2万吨粮食长距离运输，铁路运量大且成本低'
+                }，
+                {
+                    name: '赵县雪花梨',
+                    weight: 5000,
+                    volume: 400,
+                    origin: '赵县梨园',
+                    destination: '保定水果市场',
+                    urgency: '普通',
+                    requirements: ['保鲜', '短途'],
+                    preferredTransport: '公路',
+                    customerNote: '雪花梨需要保鲜，距离约100公里',
+                    correctTransport: 'highway',
+                    reasoning: '赵县到保定约100公里，短途运输，公路运输约1.5小时，快速便捷'
                 }
             ];
         } else {
@@ -499,7 +525,20 @@ class LogisticsGame {
                     customerNote: '国际原油运输，需要专业油轮',
                     correctTransport: 'waterway',
                     reasoning: '10万吨原油国际长距离运输，海运运量最大且成本最低'
-                }
+                }，
+                {
+                    name: '青岛海鲜',
+                    weight: 2000,
+                    volume: 100,
+                    origin: '青岛港口',
+                    destination: '济南水产市场',
+                    urgency: '紧急',
+                    requirements: ['保鲜', '时效', '中短途'],
+                    preferredTransport: '公路',
+                    customerNote: '海鲜需要尽快送达，保证新鲜，距离约300公里',
+                    correctTransport: 'highway',
+                    reasoning: '青岛到济南约300公里，中短途运输，使用冷藏车公路运输最快速便捷'
+                },
             ];
         }
     }

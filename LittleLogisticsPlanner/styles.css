@@ -19,6 +19,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow-y: auto; /* 新增：允许垂直滚动 */
 }
 
 /* 游戏头部 */
@@ -90,7 +91,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto; /* 新增：允许垂直滚动 */
+    -webkit-overflow-scrolling: touch; /* 新增：平滑滚动 */
 }
 
 .screen-content {
@@ -574,44 +576,277 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* 容器优化 */
     .game-container {
-        padding: 10px;
+        padding: 8px;
+        height: 100vh;
     }
-
+    
+    /* 头部优化 */
     .game-header {
-        padding: 12px;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
-
+    
     .game-header h1 {
-        font-size: 1.3em;
-    }
-
-    .game-stats {
-        gap: 15px;
-    }
-
-    .stat-value {
-        font-size: 1.2em;
-    }
-
-    .panel {
-        padding: 12px;
-    }
-
-    .panel h3 {
         font-size: 1.1em;
-        margin-bottom: 10px;
     }
-
+    
+    .game-stats {
+        gap: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .stat-label {
+        font-size: 0.7em;
+    }
+    
+    .stat-value {
+        font-size: 0.95em;
+    }
+    
+    /* 游戏布局优化 */
+    .game-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+        gap: 8px;
+    }
+    
+    /* 面板优化 */
+    .panel {
+        padding: 8px;
+        border-radius: 8px;
+    }
+    
+    .panel h3 {
+        font-size: 0.95em;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+    }
+    
+    /* 工单列表优化 */
+    .work-orders-list {
+        max-height: 35vh; /* 限制最大高度 */
+    }
+    
+    .work-order {
+        padding: 6px;
+        margin-bottom: 5px;
+    }
+    
+    .order-number {
+        font-size: 0.8em;
+    }
+    
+    .priority-badge {
+        font-size: 0.65em;
+        padding: 1px 4px;
+    }
+    
+    .order-content h4 {
+        font-size: 0.85em;
+        margin-bottom: 4px;
+    }
+    
+    .order-details {
+        font-size: 0.7em;
+        line-height: 1.2;
+    }
+    
+    .order-details p {
+        margin: 2px 0;
+    }
+    
+    .requirement-tag {
+        font-size: 0.6em;
+        padding: 1px 4px;
+    }
+    
+    .order-note {
+        font-size: 0.65em;
+        padding: 4px;
+        margin-top: 4px;
+    }
+    
+    /* 运输方式优化 */
+    .transport-options {
+        max-height: 40vh;
+    }
+    
     .transport-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 12px;
+        padding: 6px 8px;
+        gap: 6px;
     }
-
+    
+    .transport-icon {
+        font-size: 1.5em;
+        width: 30px;
+    }
+    
+    .transport-info h4 {
+        font-size: 0.85em;
+        margin-bottom: 4px;
+    }
+    
+    .transport-info-grid {
+        gap: 2px 6px;
+    }
+    
+    .transport-info p {
+        font-size: 0.65em;
+        line-height: 1.2;
+    }
+    
     .select-btn {
-        margin-left: 0;
-        margin-top: 10px;
+        padding: 4px 8px;
+        font-size: 0.7em;
+    }
+    
+    /* 已分配任务优化 */
+    .assigned-tasks {
+        max-height: 25vh;
+    }
+    
+    .assigned-task {
+        padding: 5px;
+        margin-bottom: 4px;
+    }
+    
+    .task-order {
+        font-size: 0.75em;
+        padding: 2px 4px;
+    }
+    
+    .task-item {
+        font-size: 0.8em;
+    }
+    
+    .task-transport {
+        font-size: 0.8em;
+    }
+    
+    .task-reward {
+        font-size: 0.8em;
+    }
+    
+    /* 按钮优化 */
+    .btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        border-radius: 15px;
+    }
+    
+    .btn-danger {
+        padding: 4px 8px;
+        font-size: 0.7em;
+    }
+    
+    .btn-sound {
+        padding: 4px 8px;
+        min-width: 45px;
+    }
+    
+    /* 任务操作区域固定在底部 */
+    .task-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 8px;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 2px solid #eee;
+        z-index: 100;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 关卡进度优化 */
+    .level-progress {
+        padding: 6px 8px;
+        margin-top: 8px;
+    }
+    
+    .progress-text,
+    .progress-count {
+        font-size: 0.7em;
+    }
+    
+    .progress-bar-container {
+        height: 16px;
+    }
+    
+    .progress-percentage {
+        font-size: 0.8em;
+        margin-top: 4px;
+    }
+    
+    /* 滚动条样式优化 */
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(102, 126, 234, 0.5);
+        border-radius: 2px;
+    }
+}
+
+/* 超小屏幕额外优化 */
+@media (max-width: 480px) {
+    .game-container {
+        padding: 5px;
+    }
+    
+    .game-header {
+        padding: 6px 8px;
+    }
+    
+    .game-header h1 {
+        font-size: 1em;
+    }
+    
+    .stat-label {
+        font-size: 0.65em;
+    }
+    
+    .stat-value {
+        font-size: 0.85em;
+    }
+    
+    .panel {
+        padding: 6px;
+    }
+    
+    .panel h3 {
+        font-size: 0.9em;
+    }
+    
+    .order-content h4 {
+        font-size: 0.8em;
+    }
+    
+    .order-details {
+        font-size: 0.65em;
+    }
+    
+    .transport-icon {
+        font-size: 1.3em;
+        width: 25px;
+    }
+    
+    .transport-info h4 {
+        font-size: 0.8em;
+    }
+    
+    .transport-info p {
+        font-size: 0.6em;
+    }
+    
+    .btn {
+        padding: 5px 10px;
+        font-size: 0.75em;
     }
 }
 
