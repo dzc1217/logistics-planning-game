@@ -406,17 +406,17 @@ class LogisticsGame {
                     reasoning: '水果保鲜要求高，需要航空快速运输'
                 },
                 {
-                    name: '建材水泥',
+                    name: '建材',
                     weight: 20000,
                     volume: 15000,
-                    origin: '唐山水泥厂',
-                    destination: '天津建筑工地',
+                    origin: '大连建材厂',
+                    destination: '烟台建筑工地',
                     urgency: '普通',
-                    requirements: ['大宗',,'门对门', '低价', '重货'],
-                    preferredTransport: '公路',
+                    requirements: ['大宗',,'烟大轮渡', '低价', '重货'],
+                    preferredTransport: '海路',
                     customerNote: '短途运输，需要及时供应',
-                    correctTransport: 'highway',
-                    reasoning: '短途水泥运输，公路灵活便捷'
+                    correctTransport: 'waterway',
+                    reasoning: '大连到烟台直线距离约160公里，但绕行陆路约1400公里，大宗货物，应采用渤海湾烟大轮渡航线'
                 },
                 {
                     name: '粮食运输',
