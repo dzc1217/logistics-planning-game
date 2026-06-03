@@ -4,6 +4,13 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,7 +26,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* 新增：允许垂直滚动 */
+    overflow-y: auto;
 }
 
 /* 游戏头部 */
@@ -91,8 +98,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* 新增：允许垂直滚动 */
-    -webkit-overflow-scrolling: touch; /* 新增：平滑滚动 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .screen-content {
@@ -199,17 +206,7 @@ body {
     background: linear-gradient(45deg, #95a5a6, #7f8c8d);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
-}
-
-/* 游戏布局 */
+/* 游戏布局 - 桌面端默认 grid 三列 */
 .game-layout {
     display: grid;
     grid-template-columns: 1fr 2.5fr 1fr;
@@ -552,322 +549,6 @@ body {
     color: #667eea;
 }
 
-/* 响应式设计 */
-@media (max-width: 1200px) {
-    .game-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .game-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-
-    .game-stats {
-        justify-content: center;
-    }
-
-    .assigned-tasks-panel {
-        grid-row: span 1;
-    }
-}
-
-@media (max-width: 768px) {
-    /* 容器优化 */
-    .game-container {
-        padding: 8px;
-        height: 100vh;
-    }
-    
-    /* 头部优化 */
-    .game-header {
-        padding: 8px 10px;
-        margin-bottom: 8px;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .game-header h1 {
-        font-size: 1.1em;
-    }
-    
-    .game-stats {
-        gap: 10px;
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .stat-label {
-        font-size: 0.7em;
-    }
-    
-    .stat-value {
-        font-size: 0.95em;
-    }
-    
-    /* 游戏布局优化 */
-    .game-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto;
-        gap: 8px;
-    }
-    
-    /* 面板优化 */
-    .panel {
-        padding: 8px;
-        border-radius: 8px;
-    }
-    
-    .panel h3 {
-        font-size: 0.95em;
-        margin-bottom: 8px;
-        padding-bottom: 6px;
-    }
-    
-    /* 工单列表优化 */
-    .work-orders-list {
-        max-height: 35vh; /* 限制最大高度 */
-    }
-    
-    .work-order {
-        padding: 6px;
-        margin-bottom: 5px;
-    }
-    
-    .order-number {
-        font-size: 0.8em;
-    }
-    
-    .priority-badge {
-        font-size: 0.65em;
-        padding: 1px 4px;
-    }
-    
-    .order-content h4 {
-        font-size: 0.85em;
-        margin-bottom: 4px;
-    }
-    
-    .order-details {
-        font-size: 0.7em;
-        line-height: 1.2;
-    }
-    
-    .order-details p {
-        margin: 2px 0;
-    }
-    
-    .requirement-tag {
-        font-size: 0.6em;
-        padding: 1px 4px;
-    }
-    
-    .order-note {
-        font-size: 0.65em;
-        padding: 4px;
-        margin-top: 4px;
-    }
-    
-    /* 运输方式优化 */
-    .transport-options {
-        max-height: 40vh;
-    }
-    
-    .transport-card {
-        padding: 6px 8px;
-        gap: 6px;
-    }
-    
-    .transport-icon {
-        font-size: 1.5em;
-        width: 30px;
-    }
-    
-    .transport-info h4 {
-        font-size: 0.85em;
-        margin-bottom: 4px;
-    }
-    
-    .transport-info-grid {
-        gap: 2px 6px;
-    }
-    
-    .transport-info p {
-        font-size: 0.65em;
-        line-height: 1.2;
-    }
-    
-    .select-btn {
-        padding: 4px 8px;
-        font-size: 0.7em;
-    }
-    
-    /* 已分配任务优化 */
-    .assigned-tasks {
-        max-height: 25vh;
-    }
-    
-    .assigned-task {
-        padding: 5px;
-        margin-bottom: 4px;
-    }
-    
-    .task-order {
-        font-size: 0.75em;
-        padding: 2px 4px;
-    }
-    
-    .task-item {
-        font-size: 0.8em;
-    }
-    
-    .task-transport {
-        font-size: 0.8em;
-    }
-    
-    .task-reward {
-        font-size: 0.8em;
-    }
-    
-    /* 按钮优化 */
-    .btn {
-        padding: 6px 12px;
-        font-size: 0.8em;
-        border-radius: 15px;
-    }
-    
-    .btn-danger {
-        padding: 4px 8px;
-        font-size: 0.7em;
-    }
-    
-    .btn-sound {
-        padding: 4px 8px;
-        min-width: 45px;
-    }
-    
-    /* 任务操作区域固定在底部 */
-    .task-actions {
-        position: sticky;
-        bottom: 0;
-        background: white;
-        padding: 8px;
-        padding-top: 8px;
-        margin-top: 8px;
-        border-top: 2px solid #eee;
-        z-index: 100;
-        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* 关卡进度优化 */
-    .level-progress {
-        padding: 6px 8px;
-        margin-top: 8px;
-    }
-    
-    .progress-text,
-    .progress-count {
-        font-size: 0.7em;
-    }
-    
-    .progress-bar-container {
-        height: 16px;
-    }
-    
-    .progress-percentage {
-        font-size: 0.8em;
-        margin-top: 4px;
-    }
-    
-    /* 滚动条样式优化 */
-    ::-webkit-scrollbar {
-        width: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: rgba(102, 126, 234, 0.5);
-        border-radius: 2px;
-    }
-}
-
-/* 超小屏幕额外优化 */
-@media (max-width: 480px) {
-    .game-container {
-        padding: 5px;
-    }
-    
-    .game-header {
-        padding: 6px 8px;
-    }
-    
-    .game-header h1 {
-        font-size: 1em;
-    }
-    
-    .stat-label {
-        font-size: 0.65em;
-    }
-    
-    .stat-value {
-        font-size: 0.85em;
-    }
-    
-    .panel {
-        padding: 6px;
-    }
-    
-    .panel h3 {
-        font-size: 0.9em;
-    }
-    
-    .order-content h4 {
-        font-size: 0.8em;
-    }
-    
-    .order-details {
-        font-size: 0.65em;
-    }
-    
-    .transport-icon {
-        font-size: 1.3em;
-        width: 25px;
-    }
-    
-    .transport-info h4 {
-        font-size: 0.8em;
-    }
-    
-    .transport-info p {
-        font-size: 0.6em;
-    }
-    
-    .btn {
-        padding: 5px 10px;
-        font-size: 0.75em;
-    }
-}
-
-/* 动画效果 */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.work-order,
-.transport-card,
-.assigned-task {
-    animation: fadeIn 0.5s ease-out;
-}
-
 /* 关卡进度条 */
 .level-progress {
     margin-top: 10px;
@@ -1148,5 +829,183 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* ========== 移动端布局（宽度 ≤ 768px） ========== */
+@media (max-width: 768px) {
+    .game-container {
+        height: 100vh;
+        padding: 8px;
+        overflow: hidden;
+    }
+
+    .game-header {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .game-header h1 {
+        font-size: 1.1em;
+    }
+    .game-stats {
+        gap: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .stat-label {
+        font-size: 0.7em;
+    }
+    .stat-value {
+        font-size: 0.95em;
+    }
+
+    /* 移动端改为 flex 列布局，覆盖 grid */
+    .game-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* 工单面板：固定高度 + 滚动 */
+    .work-orders-panel {
+        flex: 0 0 auto;
+        height: 35vh;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+    }
+    .work-orders-list {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* 运输方式面板：占满剩余空间 */
+    .transport-panel {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .transport-options {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* 已分配任务面板：固定高度 + 滚动 */
+    .assigned-tasks-panel {
+        flex: 0 0 auto;
+        height: 30vh;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+    }
+    .assigned-tasks {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* 操作按钮固定在底部 */
+    .task-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 8px;
+        margin-top: 8px;
+        border-top: 1px solid #eee;
+        z-index: 10;
+    }
+
+    /* 缩小进度条 */
+    .level-progress {
+        padding: 4px 8px !important;
+        margin-top: 6px !important;
+        margin-bottom: 0 !important;
+    }
+    .progress-info {
+        margin-bottom: 2px !important;
+    }
+    .progress-text,
+    .progress-count {
+        font-size: 0.7rem !important;
+    }
+    .progress-bar-container {
+        height: 12px !important;
+        border-radius: 6px !important;
+    }
+    .progress-percentage {
+        font-size: 0.7rem !important;
+        margin-top: 2px !important;
+    }
+
+    /* 运输方式卡片文字换行 */
+    .transport-info p {
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+    }
+    .transport-info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 2px !important;
+    }
+    .transport-card {
+        align-items: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+    .transport-icon {
+        flex-shrink: 0;
+    }
+    .transport-info {
+        min-width: 0;
+    }
+    .select-btn {
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    /* 工单卡片文字优化，保证至少完整显示一个任务 */
+    .work-order {
+        margin-bottom: 6px;
+        padding: 6px;
+    }
+    .order-number {
+        font-size: 0.8em;
+    }
+    .order-content h4 {
+        font-size: 0.85em;
+    }
+    .order-details {
+        font-size: 0.7em;
+    }
+    .order-details p {
+        margin: 2px 0;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .requirement-tag {
+        font-size: 0.6em;
+    }
+}
+
+/* 超小屏幕（≤480px）进一步微调 */
+@media (max-width: 480px) {
+    .work-orders-panel {
+        height: 32vh;
+    }
+    .assigned-tasks-panel {
+        height: 28vh;
+    }
+    .transport-info p {
+        font-size: 0.65rem !important;
+    }
+    .btn {
+        padding: 5px 10px;
+        font-size: 0.75em;
     }
 }
