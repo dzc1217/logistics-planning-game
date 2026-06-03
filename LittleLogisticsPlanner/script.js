@@ -525,7 +525,7 @@ class LogisticsGame {
                     customerNote: '国际原油运输，需要专业油轮',
                     correctTransport: 'waterway',
                     reasoning: '10万吨原油国际长距离运输，海运运量最大且成本最低'
-                }，
+                },
                 {
                     name: '青岛海鲜',
                     weight: 2000,
