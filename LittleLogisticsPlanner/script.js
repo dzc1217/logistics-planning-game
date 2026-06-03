@@ -443,7 +443,7 @@ class LogisticsGame {
                     customerNote: '长距离大宗粮食运输，成本要求低',
                     correctTransport: 'railway',
                     reasoning: '2万吨粮食长距离运输，铁路运量大且成本低'
-                }，
+                },
                 {
                     name: '赵县雪花梨',
                     weight: 5000,
