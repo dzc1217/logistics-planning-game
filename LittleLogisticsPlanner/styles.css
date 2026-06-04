@@ -996,7 +996,7 @@ body {
 /* 超小屏幕（≤480px）进一步微调 */
 @media (max-width: 480px) {
     .work-orders-panel {
-        height: 32vh;
+        height: 39vh;
     }
     .assigned-tasks-panel {
         height: 28vh;
