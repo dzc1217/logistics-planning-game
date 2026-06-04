@@ -876,7 +876,7 @@ body {
     .work-orders-panel {
         flex: 0 0 auto;
         height: 35vh;
-        min-height: 140px;
+        min-height: 160px;
         display: flex;
         flex-direction: column;
     }
@@ -901,7 +901,7 @@ body {
     .assigned-tasks-panel {
         flex: 0 0 auto;
         height: 30vh;
-        min-height: 120px;
+        min-height: 100px;
         display: flex;
         flex-direction: column;
     }
