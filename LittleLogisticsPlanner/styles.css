@@ -255,7 +255,7 @@ body {
 }
 
 .work-order:hover {
-    transform: scaleX(1);
+    transform: rotateY(30deg);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
