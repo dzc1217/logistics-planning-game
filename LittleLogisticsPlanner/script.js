@@ -364,7 +364,7 @@ class LogisticsGame {
                     reasoning: '天然气最适合管道运输，可连续稳定供应'
                 },
                 {
-                    name: '俄罗斯液化天然气',
+                    name: '俄罗斯北极超低温冷却压缩液化天然气',
                     weight: 80000,
                     volume: 100000,
                     origin: '俄罗斯北极港口',
