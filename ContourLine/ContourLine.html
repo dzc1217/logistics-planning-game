@@ -416,46 +416,42 @@
             }
 
             // 初始化语音识别
-const voiceBtn = document.getElementById('chat-voice');
-const inputField = document.getElementById('chat-input');
+		const voiceBtn = document.getElementById('chat-voice');
+		const inputField = document.getElementById('chat-input');
 
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'zh-CN';       // 中文识别
-    recognition.interimResults = false; // 只取最终结果
-    recognition.continuous = false;    // 说完一句就停止
+		if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    		const recognition = new SpeechRecognition();
+    		recognition.lang = 'zh-CN';       // 中文识别
+    		recognition.interimResults = false; // 只取最终结果
+    		recognition.continuous = false;    // 说完一句就停止
 
-    voiceBtn.addEventListener('click', () => {
-        voiceBtn.textContent = '🔴'; // 正在录音
-        recognition.start();
-    });
+    		voiceBtn.addEventListener('click', () => {
+        		voiceBtn.textContent = '🔴'; // 正在录音
+        		recognition.start();
+    		});
 
-    recognition.addEventListener('result', (event) => {
-        const transcript = event.results[0][0].transcript;
-        inputField.value = transcript;
-        voiceBtn.textContent = '🎤'; // 恢复麦克风图标
-        // 自动发送（可选）
-        // document.getElementById('chat-send').click();
-    });
+    		recognition.addEventListener('result', (event) => {
+        		const transcript = event.results[0][0].transcript;
+        		inputField.value = transcript;
+        		voiceBtn.textContent = '🎤'; // 恢复麦克风图标
+        		// 自动发送（可选）
+       			// document.getElementById('chat-send').click();
+    		});
 
-    recognition.addEventListener('error', (event) => {
-        voiceBtn.textContent = '🎤';
-        alert('语音识别失败：' + event.error);
-    });
+    		recognition.addEventListener('error', (event) => {
+        		voiceBtn.textContent = '🎤';
+        		alert('语音识别失败：' + event.error);
+    		});
 
-    recognition.addEventListener('end', () => {
-        voiceBtn.textContent = '🎤';
-    });
-} else {
-    voiceBtn.style.display = 'none'; // 浏览器不支持，隐藏按钮
-}
+    		recognition.addEventListener('end', () => {
+        		voiceBtn.textContent = '🎤';
+    		});
+		} else {
+    		voiceBtn.style.display = 'none'; // 浏览器不支持，隐藏按钮
+		}
 
-
-
-
-
-        }
+		}
 
         function updatePlaneImage() {
             const img = document.getElementById('contour-img');
